@@ -1,0 +1,13 @@
+# dependencies
+node_modules
+.env
+dist
+
+# logs
+logs
+*.log
+
+# system
+.DS_Store
+
+*.tsbuildinfo
