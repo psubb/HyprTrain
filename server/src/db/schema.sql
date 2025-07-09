@@ -16,6 +16,7 @@ CREATE TABLE exercises (
     muscle_group_id UUID NOT NULL,
     user_id UUID,
     is_default BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (muscle_group_id) REFERENCES muscle_groups(id),
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE (name, user_id)
@@ -27,7 +28,7 @@ CREATE TABLE programs (
     name TEXT NOT NULL,
     weeks INTEGER NOT NULL CHECK (weeks >= 4 AND weeks <= 16),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE workout_days (
@@ -37,7 +38,9 @@ CREATE TABLE workout_days (
     label TEXT,
     week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 16),
     scheduled_date DATE NOT NULL,
-    FOREIGN KEY (program_id) REFERENCES programs(id)
+    is_skipped BOOLEAN DEFAULT FALSE,
+    is_completed BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 );
 
 CREATE TABLE workout_exercises (
@@ -45,7 +48,7 @@ CREATE TABLE workout_exercises (
     workout_day_id UUID NOT NULL,
     exercise_id UUID NOT NULL,
     order_index INTEGER NOT NULL,
-    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id),
+    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES exercises(id)
 );
 
@@ -53,7 +56,7 @@ CREATE TABLE exercise_sets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_exercise_id UUID NOT NULL,
     set_number INTEGER NOT NULL,
-    FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises(id)
+    FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises(id) ON DELETE CASCADE
 );
 
 CREATE TABLE exercise_logs (
@@ -61,22 +64,22 @@ CREATE TABLE exercise_logs (
     exercise_set_id UUID NOT NULL,
     reps INTEGER NOT NULL CHECK (reps >= 0),
     weight NUMERIC(4,1) NOT NULL CHECK (weight >= 0),
-    rpe NUMERIC(3,1) CHECK (rpe >= 0 AND rpe <= 10),
-    FOREIGN KEY (exercise_set_id) REFERENCES exercise_sets(id)
+    rpe NUMERIC(3,1) DEFAULT NULL CHECK (rpe >= 0 AND rpe <= 10),
+    FOREIGN KEY (exercise_set_id) REFERENCES exercise_sets(id) ON DELETE CASCADE
 );
 
 CREATE TABLE daily_notes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_day_id UUID NOT NULL,
     note TEXT,
-    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id)
+    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE
 );
 
 CREATE TABLE exercise_notes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_exercise_id UUID NOT NULL,
     note TEXT,
-    FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises(id)
+    FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises(id) ON DELETE CASCADE
 );
 
 CREATE TYPE soreness_level AS ENUM ('Well Recovered', 'Slightly Sore', 'Very Sore');
@@ -86,6 +89,6 @@ CREATE TABLE soreness_logs (
     workout_day_id UUID NOT NULL,
     muscle_group_id UUID NOT NULL,
     level soreness_level,
-    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id),
+    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE,
     FOREIGN KEY (muscle_group_id) REFERENCES muscle_groups(id)
 );
