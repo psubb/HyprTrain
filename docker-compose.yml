@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: hyprtrain_db
+    restart: always
+    environment:
+      POSTGRES_DB: hyprtrain_dev
+      POSTGRES_USER: hyprtrain
+      POSTGRES_PASSWORD: devpass
+    ports:
+      - "5432:5432"
+    volumes:
+      pgdata:/var/lib/postgresql/data
+      - .db/init:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
