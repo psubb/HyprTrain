@@ -131,7 +131,7 @@ FROM (VALUES
   ('Conventional Deadlift'),
   ('Sumo Deadlift'),
   ('Step Ups'),
-  ('Lunges')
+  ('Lunges'),
   ('Machine Hip Abduction')
   ('Single Leg Hip Thrusts')
 ) AS e(exercise_name)
