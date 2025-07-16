@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { createUser, findUserByEmail } from '../models/userModel';
-import { error } from 'console';
+import { DBUser } from '../types/User';
 
 const saltRounds = 10; // Hashing rounds
 
@@ -15,9 +15,9 @@ export async function register(req: Request, res: Response) {
         }
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
-        const user = await createUser(email, hashedPassword);
+        const user: DBUser = await createUser(email, hashedPassword);
 
-        // Return all fields about user except for hasedPassword for security
+        // Return all fields about user except for hashedPassword for security
         res.status(201).json({
             message: 'User Created',
             user: {
@@ -26,7 +26,7 @@ export async function register(req: Request, res: Response) {
                 created_at: user.created_at,
             },
         });
-        
+
     } catch (error: any) {
         // PostgreSQL unique_violation
         if (error.code === '23505') {
@@ -44,13 +44,13 @@ export async function login(req: Request, res: Response) {
             return res.status(400).json({message: 'Email and password are required.'});
         }
 
-        const user = await findUserByEmail(email);
+        const user: DBUser | null = await findUserByEmail(email);
 
         if (!user) {
             return res.status(401).json({message: 'Invalid credentials.'});
         }
         
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
         if (!isPasswordValid) {
             return res.status(401).json({message: 'Invalid credentials.'});
