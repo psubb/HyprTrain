@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { createUser, findUserByEmail } from '../models/userModel';
+import { error } from 'console';
 
 const saltRounds = 10; // Hashing rounds
 
@@ -34,7 +36,20 @@ export async function login(req: Request, res: Response) {
         }
 
         const user = await findUserByEmail(email);
-    } catch {
+
+        if (!user) {
+            return res.status(401).json({message: 'Invalid credentials.'});
+        }
         
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({message: 'Invalid credentials.'});
+        }
+        // TODO: Create JWT token and implement functionality
+        return res.status(200).json({message: 'Successful Login!'});
+
+    } catch (error: any){
+        return res.status(500).json({message: 'Something went wrong.', error: error.message});
     }
 }
