@@ -17,7 +17,16 @@ export async function register(req: Request, res: Response) {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const user = await createUser(email, hashedPassword);
 
-        res.status(201).json({message: 'User Created', user});
+        // Return all fields about user except for hasedPassword for security
+        res.status(201).json({
+            message: 'User Created',
+            user: {
+                id: user.id,
+                email: user.email,
+                created_at: user.created_at,
+            },
+        });
+        
     } catch (error: any) {
         // PostgreSQL unique_violation
         if (error.code === '23505') {
