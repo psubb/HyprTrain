@@ -11,7 +11,8 @@ export async function register(req: Request, res: Response) {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({message: 'Email and password are required.'});
+            res.status(400).json({message: 'Email and password are required.'});
+            return;
         }
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -30,7 +31,8 @@ export async function register(req: Request, res: Response) {
     } catch (error: any) {
         // PostgreSQL unique_violation
         if (error.code === '23505') {
-            return res.status(409).json({message: 'Email already in use.'});
+            res.status(409).json({message: 'Email already in use.'});
+            return;
         }
         res.status(500).json({message: 'Something went wrong.', error: error.message});
     }
@@ -41,24 +43,27 @@ export async function login(req: Request, res: Response) {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({message: 'Email and password are required.'});
+            res.status(400).json({message: 'Email and password are required.'});
+            return;
         }
 
         const user: DBUser | null = await findUserByEmail(email);
 
         if (!user) {
-            return res.status(401).json({message: 'Invalid credentials.'});
+            res.status(401).json({message: 'Invalid credentials.'});
+            return;
         }
         
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
         if (!isPasswordValid) {
-            return res.status(401).json({message: 'Invalid credentials.'});
+            res.status(401).json({message: 'Invalid credentials.'});
+            return;
         }
         // TODO: Create JWT token and implement functionality
-        return res.status(200).json({message: 'Successful Login!'});
+        res.status(200).json({message: 'Successful Login!'});
 
     } catch (error: any){
-        return res.status(500).json({message: 'Something went wrong.', error: error.message});
+        res.status(500).json({message: 'Something went wrong.', error: error.message});
     }
 }
