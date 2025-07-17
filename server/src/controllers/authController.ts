@@ -16,6 +16,17 @@ export async function register(req: Request, res: Response) {
             return;
         }
 
+        if (!validator.isStrongPassword(password, {
+            minLength: 8,
+            minLowercase: 1,
+            minNumbers: 1,
+            minUppercase: 1
+            })
+        ) {
+            res.status(400).json({message: 'Password should be at least 8 characters and include 1 lowercase, 1 uppercase letter, and 1 number.'});
+            return;
+        }
+
         if (!validator.isEmail(email)) {
             res.status(400).json({message: 'Invalid email format.'});
             return;
