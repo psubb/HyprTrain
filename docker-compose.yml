@@ -13,5 +13,17 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./server/src/db/init:/docker-entrypoint-initdb.d
 
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    working_dir: /usr/src/app
+    env_file:
+      - ./server/.env
+    depends_on:
+      - db
+    
 volumes:
   pgdata:
