@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { createUser, findUserByEmail } from '../models/userModel';
 import { DBUser } from '../types/User';
-import validator from 'validator';
+import { validateRegisterInput } from '../utils/validation';
 
 const saltRounds = 10; // Hashing rounds
 
@@ -16,19 +16,8 @@ export async function register(req: Request, res: Response) {
             return;
         }
 
-        if (!validator.isStrongPassword(password, {
-            minLength: 8,
-            minLowercase: 1,
-            minNumbers: 1,
-            minUppercase: 1
-            })
-        ) {
-            res.status(400).json({message: 'Password should be at least 8 characters and include 1 lowercase, 1 uppercase letter, and 1 number.'});
-            return;
-        }
-
-        if (!validator.isEmail(email)) {
-            res.status(400).json({message: 'Invalid email format.'});
+        if (!validateRegisterInput(email, password)) {
+            res.status(400).json({message: 'Invalid email or password format. Password must be at least 8 characters and include 1 lowercase, 1 uppercase letter, and 1 number.'});
             return;
         }
 
