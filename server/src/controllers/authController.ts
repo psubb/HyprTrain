@@ -34,7 +34,9 @@ export async function register(req: Request, res: Response) {
             res.status(409).json({message: 'Email already in use.'});
             return;
         }
-        res.status(500).json({message: 'Something went wrong.', error: error.message});
+        // TODO: Replace with logger before deploying to production?
+        console.error('Register Error:', error); // Log full error message
+        res.status(500).json({message: 'Something went wrong.', error: error?.message || 'Unknown error' });
     }
 }
 
