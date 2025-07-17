@@ -132,7 +132,7 @@ FROM (VALUES
   ('Sumo Deadlift'),
   ('Step Ups'),
   ('Lunges'),
-  ('Machine Hip Abduction')
+  ('Machine Hip Abduction'),
   ('Single Leg Hip Thrusts')
 ) AS e(exercise_name)
 JOIN muscle_groups mg ON mg.name = 'Glutes';
