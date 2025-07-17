@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { createUser, findUserByEmail } from '../models/userModel';
 import { DBUser } from '../types/User';
+import validator from 'validator';
 
 const saltRounds = 10; // Hashing rounds
 
@@ -12,6 +13,11 @@ export async function register(req: Request, res: Response) {
 
         if (!email || !password) {
             res.status(400).json({message: 'Email and password are required.'});
+            return;
+        }
+
+        if (!validator.isEmail(email)) {
+            res.status(400).json({message: 'Invalid email format.'});
             return;
         }
 
