@@ -68,7 +68,7 @@ export async function login(req: Request, res: Response) {
             res.status(401).json({message: 'Invalid credentials.'});
             return;
         }
-        
+        // TODO: Add refresh token if needed
         if (!process.env.ACCESS_TOKEN_SECRET) {
             throw new Error('Missing ACCESS_TOKEN_SECRET in environment variable');
         }
