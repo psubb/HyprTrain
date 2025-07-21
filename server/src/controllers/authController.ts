@@ -68,8 +68,13 @@ export async function login(req: Request, res: Response) {
             res.status(401).json({message: 'Invalid credentials.'});
             return;
         }
-        // TODO: Create JWT token and implement functionality
-        res.status(200).json({message: 'Successful Login!'});
+        
+        if (!process.env.ACCESS_TOKEN_SECRET) {
+            throw new Error('Missing ACCESS_TOKEN_SECRET in environment variable');
+        }
+        const accessToken = jwt.sign({userId: user.id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '90m' });
+
+        res.status(200).json({message: 'Successful Login!', accessToken, user: {id: user.id, email: user.email, created_at: user.created_at}});
 
     } catch (error: any){
         res.status(500).json({message: 'Something went wrong.', error: error.message});
