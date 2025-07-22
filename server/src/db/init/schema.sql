@@ -26,7 +26,7 @@ CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     name TEXT NOT NULL,
-    weeks INTEGER NOT NULL CHECK (weeks >= 4 AND weeks <= 16),
+    duration_weeks INTEGER NOT NULL CHECK (weeks >= 4 AND weeks <= 16),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
