@@ -6,8 +6,9 @@ import { DBUser } from '../types/User';
 import { validateRegisterInput } from '../utils/validation';
 
 const saltRounds = 10; // Hashing rounds
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET as string;
 
-export async function register(req: Request, res: Response) {
+export async function register(req: Request, res: Response): Promise<void> {
     try {
         const { email, password } = req.body;
 
@@ -24,9 +25,12 @@ export async function register(req: Request, res: Response) {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const user: DBUser = await createUser(email, hashedPassword);
 
+        const token = jwt.sign({ userId: user.id}, JWT_SECRET, { expiresIn: '90m' });
+
         // Return all fields about user except for hashedPassword for security
         res.status(201).json({
             message: 'User Created',
+            token,
             user: {
                 id: user.id,
                 email: user.email,
@@ -46,7 +50,7 @@ export async function register(req: Request, res: Response) {
     }
 }
 
-export async function login(req: Request, res: Response) {
+export async function login(req: Request, res: Response): Promise<void> {
     try {
         const { email, password } = req.body;
 
@@ -72,7 +76,7 @@ export async function login(req: Request, res: Response) {
         if (!process.env.ACCESS_TOKEN_SECRET) {
             throw new Error('Missing ACCESS_TOKEN_SECRET in environment variable');
         }
-        const accessToken = jwt.sign({userId: user.id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '90m' });
+        const accessToken = jwt.sign({userId: user.id}, JWT_SECRET, { expiresIn: '90m' });
 
         res.status(200).json({message: 'Successful Login!', accessToken, user: {id: user.id, email: user.email, created_at: user.created_at}});
 

@@ -6,7 +6,7 @@ interface AuthenticatedRequest extends Request {
     user?: { userId: string };
 }
 
-export function authenticateAccessToken (req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function authenticateAccessToken (req: AuthenticatedRequest, res: Response, next: NextFunction): Response | void {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
