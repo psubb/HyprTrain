@@ -1,16 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { Response, Request, NextFunction } from 'express';
 
-// Extends the request to allow for optional userdata along with it
-interface AuthenticatedRequest extends Request {
-    user?: { userId: string };
-}
-
-export function authenticateAccessToken (req: AuthenticatedRequest, res: Response, next: NextFunction): Response | void {
+export function authenticateAccessToken (req: Request, res: Response, next: NextFunction): void {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({message: 'Missing or malformed token'});
+        res.status(401).json({message: 'Missing or malformed token'});
+        return;
     }
 
     const token = authHeader.split(' ')[1];
@@ -24,10 +20,12 @@ export function authenticateAccessToken (req: AuthenticatedRequest, res: Respons
             req.user = { userId: decoded.userId };
             next();
         } else {
-            return res.status(401).json({message: 'Invalid token format'});
+            res.status(401).json({message: 'Invalid token format'});
+            return;
         }
     } catch (err) {
-        return res.status(401).json({message: 'Invalid or expired token'});
+        res.status(401).json({message: 'Invalid or expired token'});
+        return;
     }
     
 }
