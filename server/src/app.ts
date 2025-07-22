@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
-app.get('/', (_req, res) => {
+app.get('/', (_req: Request, res: Response): void => {
     res.send('HyprTrain API is running');
 });
 
