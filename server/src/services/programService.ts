@@ -1,4 +1,4 @@
-import { insertProgram, countProgramsForUser } from "models/programModel";
+import { insertProgram, countProgramsForUser } from "../models/programModel";
 
 export async function createProgram(userId: string, data: { name?: string; duration_weeks: number}) {
     const { name, duration_weeks } = data;
