@@ -11,7 +11,8 @@ export async function createProgram(userId: string, data: { name?: string; durat
         finalName = cleanName!;
     }
 
-    await insertProgram(userId, finalName, duration_weeks);
+    const newProgram = await insertProgram(userId, finalName, duration_weeks);
+    return newProgram;
 }
 
 export async function generateDefaultProgramName(userId: string): Promise<string> {
