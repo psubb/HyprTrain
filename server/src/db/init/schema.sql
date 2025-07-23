@@ -35,7 +35,6 @@ CREATE TABLE workout_days (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     program_id UUID NOT NULL,
     day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
-    custom_label TEXT DEFAULT NULL,
     week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 16),
     is_skipped BOOLEAN DEFAULT FALSE,
     is_completed BOOLEAN DEFAULT FALSE,
@@ -46,7 +45,7 @@ CREATE TABLE workout_exercises (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_day_id UUID NOT NULL,
     exercise_id UUID NOT NULL,
-    order_index INTEGER NOT NULL,
+    order_index INTEGER NOT NULL (order_index >= 0),
     FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES exercises(id)
 );
