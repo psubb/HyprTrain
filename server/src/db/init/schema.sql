@@ -35,9 +35,8 @@ CREATE TABLE workout_days (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     program_id UUID NOT NULL,
     day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
-    label TEXT,
+    custom_label TEXT DEFAULT NULL,
     week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 16),
-    scheduled_date DATE NOT NULL,
     is_skipped BOOLEAN DEFAULT FALSE,
     is_completed BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
