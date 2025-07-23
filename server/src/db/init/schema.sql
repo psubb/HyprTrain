@@ -45,7 +45,7 @@ CREATE TABLE workout_exercises (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     workout_day_id UUID NOT NULL,
     exercise_id UUID NOT NULL,
-    order_index INTEGER NOT NULL (order_index >= 0),
+    order_index INTEGER NOT NULL CHECK (order_index >= 0),
     FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES exercises(id)
 );
