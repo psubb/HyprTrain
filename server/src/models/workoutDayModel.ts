@@ -1,4 +1,5 @@
 import pool from "../db/db";
+import { WorkoutDay } from "../types/WorkoutDay";
 
 export async function insertWorkoutDay(programId: string, dayOfWeek: number, weekNumber: number) {
     const query = `
@@ -29,4 +30,18 @@ export async function getProgramIdFromWorkoutDay(workoutDayID: string): Promise<
     }
 
     return result.rows[0].program_id;
+}
+
+export async function getWorkoutDaysByProgramAndDayOfWeek(programId: string, dayOfWeek: number): Promise<WorkoutDay[]> {
+    const query = `
+    SELECT id
+    FROM workout_days
+    WHERE program_id = $1 AND day_of_week = $2;
+    `
+
+    const values = [programId, dayOfWeek];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
 }
