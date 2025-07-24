@@ -90,7 +90,8 @@ FROM (VALUES
   ('Incline Dumbbell Bicep Curl'),
   ('EZ Bar Curl'),
   ('Cable Curl'),
-  ('Bayesian Curl')
+  ('Bayesian Curl'),
+  ('Hammer Curl')
 ) AS e(exercise_name)
 JOIN muscle_groups mg ON mg.name = 'Biceps';
 
