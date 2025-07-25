@@ -1,7 +1,7 @@
 import pool from "../db/db";
 import { WorkoutDay } from "../types/WorkoutDay";
 
-export async function insertWorkoutDay(programId: string, dayOfWeek: number, weekNumber: number) {
+export async function insertWorkoutDay(programId: string, dayOfWeek: number, weekNumber: number): Promise<WorkoutDay> {
     const query = `
     INSERT INTO workout_days (program_id, day_of_week, week_number)
     VALUES ($1, $2, $3)
@@ -32,7 +32,7 @@ export async function getProgramIdFromWorkoutDay(workoutDayID: string): Promise<
     return result.rows[0].program_id;
 }
 
-export async function getWorkoutDaysByProgramAndDayOfWeek(programId: string, dayOfWeek: number): Promise<WorkoutDay[]> {
+export async function getWorkoutDaysByProgramAndDayOfWeek(programId: string, dayOfWeek: number): Promise<{ id: string }[]> {
     const query = `
     SELECT id
     FROM workout_days
