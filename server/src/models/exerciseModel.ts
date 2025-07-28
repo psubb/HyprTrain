@@ -19,7 +19,7 @@ export async function insertCustomExercise(userId: string, exerciseName: string,
 export async function findExerciseByNameForUser(userId: string, exerciseName: string): Promise<Exercise | null> {
     const result = await pool.query(
     `SELECT * FROM exercises
-    WHERE exercise_name ILIKE $1 AND (user_id = $2 OR user_id IS NULL)`,
+    WHERE name ILIKE $1 AND (user_id = $2 OR user_id IS NULL)`,
     [exerciseName, userId]
     );
 
