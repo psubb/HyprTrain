@@ -1,4 +1,4 @@
-import { insertCustomExercise, findExerciseByNameForUser } from "../models/exerciseModel";
+import { insertCustomExercise, findExerciseByNameForUser, softDeleteExerciseById } from "../models/exerciseModel";
 import { Exercise } from "../types/Exercise";
 
 export async function createCustomExercise(userId: string, exerciseName: string, muscleGroupId: string): Promise<Exercise>{
@@ -13,4 +13,14 @@ export async function createCustomExercise(userId: string, exerciseName: string,
         throw new Error("Exercise already exists")
     }
     return await insertCustomExercise(userId, trimmedName, muscleGroupId);
+}
+
+export async function deleteCustomExercise(userId: string, exerciseId: string): Promise<Exercise> {
+    const deleted = await softDeleteExerciseById(userId, exerciseId);
+
+    if (!deleted){
+        throw new Error("Custom exercise not found or already deleted");
+    }
+
+    return deleted;
 }
