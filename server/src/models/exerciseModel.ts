@@ -37,3 +37,14 @@ export async function softDeleteExerciseById(userId: string, exerciseId: string)
 
     return result.rows[0] || null;
 }
+
+export async function getCustomExercisesForUser(userId: string): Promise<Exercise[]>{
+    const result = await pool.query(
+        `SELECT * FROM exercises
+        WHERE user_id = $1 AND is_deleted = false AND is_default = false
+        ORDER BY name ASC`,
+        [userId]
+    );
+
+    return result.rows;
+}
