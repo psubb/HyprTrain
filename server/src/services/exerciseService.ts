@@ -16,11 +16,11 @@ export async function createCustomExercise(userId: string, exerciseName: string,
 }
 
 export async function deleteCustomExercise(userId: string, exerciseId: string): Promise<Exercise> {
-    const deleted = await softDeleteExerciseById(userId, exerciseId);
+    const deletedExercise = await softDeleteExerciseById(userId, exerciseId);
 
-    if (!deleted){
+    if (!deletedExercise){
         throw new Error("Custom exercise not found or already deleted");
     }
 
-    return deleted;
+    return deletedExercise;
 }
