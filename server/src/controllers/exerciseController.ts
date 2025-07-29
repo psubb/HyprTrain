@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createCustomExercise as createCustomExerciseService, deleteCustomExercise as deleteCustomExerciseService } from "../services/exerciseService";
+import { createCustomExercise as createCustomExerciseService, deleteCustomExercise as deleteCustomExerciseService, getCustomExercises as getCustomExercisesService } from "../services/exerciseService";
 
 export async function createCustomExercise(req: Request, res: Response){
     const userId = req.user?.userId;
@@ -35,4 +35,20 @@ export async function deleteCustomExercise(req: Request, res: Response){
     } catch (err: any) {
         res.status(400).json({message: err.message || "Failed to delete exercise"});
     }
+}
+
+export async function getCustomExercises(req: Request, res: Response){
+    const userId = req.user?.userId;
+
+    if (!userId){
+        res.status(401).json({message: "Unauthorized: User not found"});
+        return;
+    }
+
+    try {
+        const customExercises = await getCustomExercisesService(userId);
+        res.status(200).json(customExercises);
+    } catch (err: any) {
+        res.status(500).json({ message: err.message || "Failed to fetch custom exercises" });
+  }
 }
