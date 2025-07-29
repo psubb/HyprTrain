@@ -25,3 +25,15 @@ export async function findExerciseByNameForUser(userId: string, exerciseName: st
 
     return result.rows[0] || null;
 }
+
+export async function softDeleteExerciseById(userId: string, exerciseId: string): Promise<Exercise | null> {
+    const result = await pool.query(
+        `UPDATE exercises
+        SET is_deleted = true
+        WHERE id = $1 AND user_id = $2 AND is_deleted = false
+        RETURNING *`,
+        [exerciseId, userId]
+    );
+
+    return result.rows[0] || null;
+}
