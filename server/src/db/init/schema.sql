@@ -27,6 +27,7 @@ CREATE TABLE programs (
     user_id UUID NOT NULL,
     name TEXT NOT NULL,
     duration_weeks INTEGER NOT NULL CHECK (duration_weeks >= 4 AND duration_weeks <= 16),
+    is_active BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -38,6 +39,7 @@ CREATE TABLE workout_days (
     week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 16),
     is_skipped BOOLEAN DEFAULT FALSE,
     is_completed BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 );
 
