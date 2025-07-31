@@ -1,8 +1,13 @@
 import pool from "../db/db";
 
 export async function insertProgram(userId: string, name: string, duration_weeks: number) {
+    await pool.query(
+        `UPDATE programs SET is_active = FALSE WHERE user_id = $1;`,
+        [userId]
+    );
+
     const query = `
-    INSERT INTO programs (user_id, name, duration_weeks)
+    INSERT INTO programs (user_id, name, duration_weeks, is_active)
     VALUES ($1, $2, $3)
     RETURNING *;
     `;
