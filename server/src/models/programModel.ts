@@ -1,4 +1,5 @@
 import pool from "../db/db";
+import { Program } from "../types/Program";
 
 export async function insertProgram(userId: string, name: string, duration_weeks: number) {
     await pool.query(
@@ -29,4 +30,15 @@ export async function countProgramsForUser(userId: string): Promise<number> {
 
     const result = await pool.query(query, values);
     return parseInt(result.rows[0].count, 10);
+}
+
+export async function getActiveProgramForUser(userId: string): Promise<Program | null>{
+    const result = await pool.query(
+        `SELECT * FROM programs
+        WHERE user_id = $1 AND is_active = TRUE
+        LIMIT 1`,
+        [userId]
+    );
+
+    return result.rows[0] || null;
 }
