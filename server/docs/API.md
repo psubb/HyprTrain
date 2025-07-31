@@ -117,6 +117,36 @@ Creates a new program for the user.
 - `401 Unauthorized`
 - `400 Bad Request`
 
+### `GET /programs/active`
+
+Returns the currently active program for the authenticated user.
+
+**Authentication:** Required  
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**Response**
+
+- `200 OK`
+
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "name": "Push Pull Legs",
+  "duration_weeks": 8,
+  "is_active": true,
+  "created_at": "2025-07-30T00:00:00.000Z"
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
+- `500 Internal Server Error`
+
 ---
 
 ## Workout Day Routes
@@ -300,8 +330,50 @@ Authorization: Bearer <JWT_TOKEN>
 
 **Errors**
 
-| Status Code | Message                          |
-| ----------- | -------------------------------- |
-| 401         | Unauthorized: User not found     |
-| 500         | Failed to fetch custom exercises |
+- `401 Unauthorized`
+- `500 Internal Server Error`
 
+### `GET /exercises?muscle_group_id=...`
+
+Fetches all exercises (default + custom) for a given muscle group. Only exercises that are not deleted will be returned.
+
+**Authentication:** Required  
+**Query Params:**
+
+- `muscle_group_id` (UUID): The muscle group ID to filter exercises by
+
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**Response**
+
+- `200 OK`
+
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Bench Press",
+    "muscle_group_id": "uuid",
+    "user_id": null,
+    "is_default": true,
+    "is_deleted": false
+  },
+  {
+    "id": "uuid",
+    "name": "Incline Dumbbell Press",
+    "muscle_group_id": "uuid",
+    "user_id": "user-uuid",
+    "is_default": false,
+    "is_deleted": false
+  }
+]
+```
+
+**Errors**
+
+- `400 Bad Request` – Missing or invalid muscle_group_id
+- `401 Unauthorized`
+- `500 Internal Server Error`
