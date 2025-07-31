@@ -1,4 +1,4 @@
-import { insertCustomExercise, findExerciseByNameForUser, softDeleteExerciseById, getCustomExercisesForUser } from "../models/exerciseModel";
+import { insertCustomExercise, findExerciseByNameForUser, softDeleteExerciseById, getCustomExercisesForUser, getExercisesByMuscleGroupForUser } from "../models/exerciseModel";
 import { Exercise } from "../types/Exercise";
 
 export async function createCustomExercise(userId: string, exerciseName: string, muscleGroupId: string): Promise<Exercise>{
@@ -28,4 +28,10 @@ export async function deleteCustomExercise(userId: string, exerciseId: string): 
 export async function getCustomExercises(userId: string): Promise<Exercise[]>{
     const customExercises = await getCustomExercisesForUser(userId);
     return customExercises;
+}
+
+export async function getExercisesByMuscleGroup(userId: string, muscleGroupId: string): Promise<Exercise[]>{
+    const muscleGroupExercises = await getExercisesByMuscleGroupForUser(userId, muscleGroupId);
+
+    return muscleGroupExercises;
 }
