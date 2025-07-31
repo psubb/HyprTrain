@@ -9,7 +9,7 @@ export async function insertProgram(userId: string, name: string, duration_weeks
 
     const query = `
     INSERT INTO programs (user_id, name, duration_weeks, is_active)
-    VALUES ($1, $2, $3)
+    VALUES ($1, $2, $3, TRUE)
     RETURNING *;
     `;
 
