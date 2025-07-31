@@ -22,8 +22,9 @@ export async function activateFirstWorkoutDay(programId: string){
             SELECT id from workout_days
             WHERE program_id = $1 AND is_completed = FALSE
             ORDER BY week_number ASC, day_of_week ASC
-            LIMIT 1)`,
-        [[programId]]
+            LIMIT 1
+        )`,
+        [programId]
     );
 }
 

@@ -37,7 +37,6 @@ CREATE TABLE workout_days (
     program_id UUID NOT NULL,
     day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
     week_number INTEGER NOT NULL CHECK (week_number BETWEEN 1 AND 16),
-    is_skipped BOOLEAN DEFAULT FALSE,
     is_completed BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
