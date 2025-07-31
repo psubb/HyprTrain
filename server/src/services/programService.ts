@@ -1,4 +1,5 @@
-import { insertProgram, countProgramsForUser } from "../models/programModel";
+import { insertProgram, countProgramsForUser, getActiveProgramForUser } from "../models/programModel";
+import { Program } from "../types/Program";
 
 export async function createProgram(userId: string, data: { name?: string; duration_weeks: number}) {
     const { name, duration_weeks } = data;
@@ -18,4 +19,8 @@ export async function createProgram(userId: string, data: { name?: string; durat
 export async function generateDefaultProgramName(userId: string): Promise<string> {
     const programNumber = await countProgramsForUser(userId);
     return `My Program ${programNumber + 1}`;
+}
+
+export async function getActiveProgram(userId: string): Promise<Program| null>{
+    return await getActiveProgramForUser(userId);
 }
