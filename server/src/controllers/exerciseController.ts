@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createCustomExercise as createCustomExerciseService, deleteCustomExercise as deleteCustomExerciseService, getCustomExercises as getCustomExercisesService } from "../services/exerciseService";
+import { createCustomExercise as createCustomExerciseService, deleteCustomExercise as deleteCustomExerciseService, getCustomExercises as getCustomExercisesService, getExercisesByMuscleGroup as getExercisesByMuscleGroupService } from "../services/exerciseService";
 
 export async function createCustomExercise(req: Request, res: Response){
     const userId = req.user?.userId;
@@ -51,4 +51,22 @@ export async function getCustomExercises(req: Request, res: Response){
     } catch (err: any) {
         res.status(500).json({ message: err.message || "Failed to fetch custom exercises" });
   }
+}
+
+export async function getExercisesByMuscleGroup(req: Request, res: Response){
+    const userId = req.user?.userId;
+
+    if (!userId){
+        res.status(401).json({message: "Unauthorized: User not found"});
+        return;
+    }
+
+    const muscleGroupId = req.query.muscle_group_id as string;
+
+    try {
+        const muscleGroupExercises = await getExercisesByMuscleGroupService(userId, muscleGroupId);
+        res.status(200).json(muscleGroupExercises);
+    } catch (err: any) {
+        res.status(500).json({message: err.message || "Failed to fetch exercises for muscle group"});
+    }
 }

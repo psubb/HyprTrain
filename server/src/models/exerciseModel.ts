@@ -52,7 +52,7 @@ export async function getCustomExercisesForUser(userId: string): Promise<Exercis
 export async function getExercisesByMuscleGroupForUser(userId: string, muscleGroupId: string): Promise<Exercise[]>{
     const result = await pool.query(
         `SELECT * FROM exercises
-        where user_id = $1 AND is_deleted = false AND muscle_group_id = $2
+        where (user_id = $1 OR is_default = true) AND is_deleted = false AND muscle_group_id = $2
         ORDER BY name ASC`,
         [userId, muscleGroupId]
     );
