@@ -18,6 +18,6 @@ export async function createWorkoutDaysForProgram(programId: string, daysOfWeek:
 }
 
 export async function getActiveWorkoutDay(programId: string, userId: string): Promise<WorkoutDay | null>{
-    const workoutDay = await getActiveWorkoutDayForUser(userId, programId);
-    return workoutDay || null;
+    const activeWorkoutDay = await getActiveWorkoutDayForUser(userId, programId);
+    return activeWorkoutDay || null;
 }
