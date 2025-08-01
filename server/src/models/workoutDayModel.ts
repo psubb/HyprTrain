@@ -59,3 +59,16 @@ export async function getWorkoutDaysByProgramAndDayOfWeek(programId: string, day
 
     return result.rows;
 }
+
+export async function getActiveWorkoutDayForUser(userId: string, programId: string): Promise<WorkoutDay| null>{
+    const result = await pool.query(
+        `SELECT wd.*
+        FROM workout_days wd
+        JOIN programs p ON wd.program_id = p.id
+        WHERE wd.program_id = $1 AND p.user_id = $2 AND wd.is_active = TRUE
+        LIMIT 1`,
+        [programId, userId]
+    );
+
+    return result.rows[0] || null;
+}
