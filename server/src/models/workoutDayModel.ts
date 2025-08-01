@@ -14,7 +14,7 @@ export async function insertWorkoutDay(programId: string, dayOfWeek: number, wee
     return result.rows[0];
 }
 
-export async function activateFirstWorkoutDay(programId: string){
+export async function activateNextWorkoutDay(programId: string){
     await pool.query(
         `UPDATE workout_days
         SET is_active = TRUE
