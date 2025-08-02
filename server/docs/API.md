@@ -147,7 +147,7 @@ Authorization: Bearer <JWT_TOKEN>
 - `401 Unauthorized`
 - `500 Internal Server Error`
 
-### GET /programs/:id/active-day
+### `GET /programs/:id/active-day`
 
 Fetches the currently active workout day for a given program.
 
@@ -181,7 +181,7 @@ Authorization: Bearer <JWT_TOKEN>
 - `404 Not Found` – No active day found for the specified program
 - `500 Internal Server Error`
 
-### GET /workout-days/:id/log
+### `GET /workout-days/:id/log`
 
 Returns the full logging structure for a workout day, including exercises, sets, logs, and notes.
 
