@@ -147,83 +147,6 @@ Authorization: Bearer <JWT_TOKEN>
 - `401 Unauthorized`
 - `500 Internal Server Error`
 
----
-
-## Workout Day Routes
-
-> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
-
-### `POST /programs/:id/workout-days`
-
-Creates recurring workout days for a program.
-
-**Request Body**
-
-```json
-{
-  "daysOfWeek": [1, 3, 5],
-  "durationWeeks": 8
-}
-```
-
-**Response**
-
-- `201 Created`
-
-```json
-{
-  "message": "Workout days created succesfully",
-  "workoutDays": [ ... ]
-}
-```
-
-**Errors**
-
-- `401 Unauthorized`
-- `400 Bad Request`
-
----
-
-## Workout Exercise Routes
-
-> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
-
-### `POST /workout-days/:id/exercises`
-
-Adds exercises to a workout day and auto-generates two default sets per exercise.
-
-**Request Body**
-
-```json
-{
-  "dayOfWeek": 1,
-  "exercises": [
-    {
-      "exerciseId": "uuid-ex-1",
-      "orderIndex": 0
-    },
-    {
-      "exerciseId": "uuid-ex-2",
-      "orderIndex": 1
-    }
-  ]
-}
-```
-
-**Response**
-
-- `201 Created`
-
-```json
-{
-  "message": "Exercises inserted"
-}
-```
-
-**Errors**
-
-- `401 Unauthorized`
-
 ### GET /programs/:id/active-day
 
 Fetches the currently active workout day for a given program.
@@ -316,6 +239,84 @@ Authorization: Bearer <JWT_TOKEN>
 - `401 Unauthorized`
 - `404 Not Found` – Workout day not found or doesn't belong to user
 - `500 Internal Server Error`
+
+
+---
+
+## Workout Day Routes
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+### `POST /programs/:id/workout-days`
+
+Creates recurring workout days for a program.
+
+**Request Body**
+
+```json
+{
+  "daysOfWeek": [1, 3, 5],
+  "durationWeeks": 8
+}
+```
+
+**Response**
+
+- `201 Created`
+
+```json
+{
+  "message": "Workout days created succesfully",
+  "workoutDays": [ ... ]
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
+- `400 Bad Request`
+
+---
+
+## Workout Exercise Routes
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+### `POST /workout-days/:id/exercises`
+
+Adds exercises to a workout day and auto-generates two default sets per exercise.
+
+**Request Body**
+
+```json
+{
+  "dayOfWeek": 1,
+  "exercises": [
+    {
+      "exerciseId": "uuid-ex-1",
+      "orderIndex": 0
+    },
+    {
+      "exerciseId": "uuid-ex-2",
+      "orderIndex": 1
+    }
+  ]
+}
+```
+
+**Response**
+
+- `201 Created`
+
+```json
+{
+  "message": "Exercises inserted"
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
 
 ---
 
