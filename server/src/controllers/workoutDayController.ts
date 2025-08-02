@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService } from '../services/workoutDayService';
+import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService, getWorkoutDayLog as getWorkoutDayService } from '../services/workoutDayService';
 
 export async function addWorkoutDays(req: Request, res: Response): Promise<void> {
     const userId = req.user?.userId;
@@ -39,10 +39,39 @@ export async function getActiveWorkoutDay(req: Request, res: Response){
     }
 
     const programId = req.params.id;
+
+    if (!programId){
+        res.status(400).json({message: 'Missing programId in URL'});
+        return;
+    }
+
     try{
         const activeWorkoutDay = await getActiveWorkoutDayService(programId, userId);
         res.status(200).json(activeWorkoutDay);
     } catch (err: any) {
         res.status(500).json({message: err.message || "Issue getting active workout day."})
+    }
+}
+
+export async function getWorkoutDayLog(req: Request, res: Response){
+    const userId = req.user?.userId;
+
+    if (!userId) {
+        res.status(401).json({message: 'Unauthorized: No user ID found.'});
+        return;
+    }
+
+    const workoutDayId = req.params.id;
+
+    if (!workoutDayId){
+        res.status(400).json({message: 'Missing workoutDayId in URL'});
+        return;
+    }
+
+    try {
+        const workoutDayLog = await getWorkoutDayService(userId, workoutDayId);
+        res.status(200).json(workoutDayLog);
+    } catch (err: any) {
+        res.status(500).json({message: err.message || "Error getting workout day log"});
     }
 }

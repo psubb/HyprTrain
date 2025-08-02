@@ -224,6 +224,99 @@ Adds exercises to a workout day and auto-generates two default sets per exercise
 
 - `401 Unauthorized`
 
+### GET /programs/:id/active-day
+
+Fetches the currently active workout day for a given program.
+
+**Authentication:** Required  
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**URL Params**
+
+- `id` (string): UUID of the program
+
+**Response**
+
+- `200 OK`
+```json
+{
+  "id": "uuid",
+  "program_id": "uuid",
+  "day_of_week": 1,
+  "week_number": 2,
+  "is_completed": false,
+  "is_active": true
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
+- `404 Not Found` – No active day found for the specified program
+- `500 Internal Server Error`
+
+### GET /workout-days/:id/log
+
+Returns the full logging structure for a workout day, including exercises, sets, logs, and notes.
+
+**Authentication:** Required  
+**Headers:**
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**URL Params**
+
+- `id` (string): UUID of the workout day
+
+**Response**
+
+- `200 OK`
+```json
+{
+  "id": "uuid",
+  "week_number": 2,
+  "day_of_week": 1,
+  "daily_note": "optional note",
+  "exercises": [
+    {
+      "id": "workout_exercise_id",
+      "exercise_id": "uuid",
+      "name": "Bench Press",
+      "order_index": 0,
+      "note": "optional note",
+      "sets": [
+        {
+          "id": "exercise_set_id",
+          "set_number": 1,
+          "log": {
+            "reps": 10,
+            "weight": 135,
+            "rpe": 7.5,
+            "completed": true
+          },
+          "previous_log": {
+            "reps": 9,
+            "weight": 130,
+            "rpe": 7.0,
+            "completed": true
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
+- `404 Not Found` – Workout day not found or doesn't belong to user
+- `500 Internal Server Error`
+
 ---
 
 ## Exercise Routes

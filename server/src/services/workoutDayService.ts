@@ -1,5 +1,6 @@
-import { activateNextWorkoutDay, insertWorkoutDay, getActiveWorkoutDayForUser } from "../models/workoutDayModel";
+import { activateNextWorkoutDay, insertWorkoutDay, getActiveWorkoutDayForUser, getWorkoutDayLog as getWorkoutDayLogModel } from "../models/workoutDayModel";
 import { WorkoutDay } from "../types/WorkoutDay";
+import { WorkoutDayLog } from "../types/WorkoutDayLog";
 
 export async function createWorkoutDaysForProgram(programId: string, daysOfWeek: number[], durationWeeks: number) {
     const insertPromises = [];
@@ -20,4 +21,9 @@ export async function createWorkoutDaysForProgram(programId: string, daysOfWeek:
 export async function getActiveWorkoutDay(programId: string, userId: string): Promise<WorkoutDay | null>{
     const activeWorkoutDay = await getActiveWorkoutDayForUser(userId, programId);
     return activeWorkoutDay || null;
+}
+
+export async function getWorkoutDayLog(userId: string, workoutDayId: string): Promise<WorkoutDayLog | null>{
+    const workoutDayLog = await getWorkoutDayLogModel(userId, workoutDayId);
+    return workoutDayLog || null;
 }

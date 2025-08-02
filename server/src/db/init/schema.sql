@@ -64,6 +64,7 @@ CREATE TABLE exercise_logs (
     reps INTEGER NOT NULL CHECK (reps >= 0),
     weight NUMERIC(4,1) NOT NULL CHECK (weight >= 0),
     rpe NUMERIC(3,1) DEFAULT NULL CHECK (rpe >= 0 AND rpe <= 10),
+    is_completed BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (exercise_set_id) REFERENCES exercise_sets(id) ON DELETE CASCADE
 );
 
