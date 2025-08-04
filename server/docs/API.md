@@ -276,6 +276,50 @@ Creates recurring workout days for a program.
 - `401 Unauthorized`
 - `400 Bad Request`
 
+### `POST /workout-days/:id/daily-note`
+
+Creates a new daily note for a specific workout day. Each workout day can have only one note. Used to store general feedback or observations for the day.
+
+**Authentication:** Required  
+**Headers:**
+
+```
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+```
+
+**URL Params**
+
+- `id` (string): UUID of the workout day to attach the note to
+
+**Request Body**
+
+```json
+{
+  "note": "Felt strong today and hit a PR on bench."
+}
+```
+
+**Response**
+
+- `201 Created`
+
+```json
+{
+  "id": "uuid",
+  "workout_day_id": "uuid",
+  "note": "Felt strong today and hit a PR on bench."
+}
+```
+
+**Errors**
+
+- `400 Bad Request` – Missing or invalid note field
+- `401 Unauthorized`
+- `404 Not Found` – Workout day not found or doesn't belong to user
+- `500 Internal Server Error`
+
+
 ---
 
 ## Workout Exercise Routes

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService, getWorkoutDayLog as getWorkoutDayService } from '../services/workoutDayService';
+import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService, getWorkoutDayLog as getWorkoutDayService, createDailyNote as createDailyNoteService } from '../services/workoutDayService';
 
 export async function addWorkoutDays(req: Request, res: Response): Promise<void> {
     const userId = req.user?.userId;
@@ -73,5 +73,35 @@ export async function getWorkoutDayLog(req: Request, res: Response){
         res.status(200).json(workoutDayLog);
     } catch (err: any) {
         res.status(500).json({message: err.message || "Error getting workout day log"});
+    }
+}
+
+export async function createDailyNote(req: Request, res: Response){
+    const userId = req.user?.userId;
+
+    if (!userId){
+        res.status(401).json({message: 'Unauthorized: No user ID found.'});
+        return; 
+    }
+
+    const workoutDayId = req.params.id;
+
+    if (!workoutDayId){
+        res.status(400).json({message: 'Missing workoutDayId in URL'});
+        return;
+    }
+
+    const { note } = req.body;
+
+    if (!note || typeof note !== 'string'){
+        res.status(400).json({ message: "Note text is required." });
+        return;
+    }
+
+    try {
+        const dailyNote = await createDailyNoteService(workoutDayId, note);
+        res.status(201).json(dailyNote);
+    } catch (err: any){
+        res.status(500).json({message: err.message || "Error creating daily note"});
     }
 }
