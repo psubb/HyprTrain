@@ -81,14 +81,3 @@ CREATE TABLE exercise_notes (
     note TEXT,
     FOREIGN KEY (workout_exercise_id) REFERENCES workout_exercises(id) ON DELETE CASCADE
 );
-
-CREATE TYPE soreness_level AS ENUM ('Well Recovered', 'Slightly Sore', 'Very Sore');
-
-CREATE TABLE soreness_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    workout_day_id UUID NOT NULL,
-    muscle_group_id UUID NOT NULL,
-    level soreness_level,
-    FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE,
-    FOREIGN KEY (muscle_group_id) REFERENCES muscle_groups(id)
-);
