@@ -574,3 +574,45 @@ Deletes the daily note for the workout day for the authenticated user.
 - `401 Unauthorized`
 - `404 Not Found` – Daily note not found or doesn't belong to user
 - `500 Internal Server Error`
+
+---
+
+Exercise Note Routes 
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+### `POST /workout-exercises/:id/note`
+
+Creates an exercise note for the workout day for the authenticated user.
+
+**URL Params**
+
+- `id` (string): UUID of the workout exercise to create note for
+
+**Request Body**
+
+```json
+{
+  "note": "New exercise note"
+}
+```
+
+**Response**
+
+- `201 Created`
+
+```json
+{
+    "exerciseNote": {
+        "id": "uuid",
+        "workout_exercise_id": "uuid",
+        "note": "New exercise note!"
+    }
+}
+```
+
+**Error**
+- `400 Bad Request` - Missing or invalid note field
+- `401 Unauthorized`
+- `404 Not Found` – Daily note not found or doesn't belong to user
+- `500 Internal Server Error`
