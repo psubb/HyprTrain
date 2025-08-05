@@ -677,3 +677,52 @@ Deletes the exercise note for the specified workout exercise for the authenticat
 - `401 Unauthorized`
 - `404 Not Found` – Exercise note not found or doesn't belong to user
 - `500 Internal Server Error`
+
+---
+
+Exercise Log Routes
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+### `POST /exercises-sets/:id/log`
+
+Creates a log for the exercise set for the authenticated user.
+
+**URL Params**
+
+- `id` (string): UUID of the exercise set to create log for
+
+**Request Body**
+
+```json
+{
+    "reps": 10,
+    "weight": 145,
+    "rpe": 5
+}
+```
+
+- reps(number): Required
+- weight(number): Required
+- rpe (number|null): Optional (between 0 and 10)
+
+**Response**
+
+- `201 Created`
+
+```json
+{
+  "id": "uuid",
+  "exercise_set_id": "uuid",
+  "reps": 10,
+  "weight": "145.0",
+  "rpe": null,
+  "is_completed": true
+}
+```
+
+**Error**
+- `400 Bad Request` - Missing or invalid note field
+- `401 Unauthorized`
+- `404 Not Found` – Exercise set log not found or doesn't belong to user
+- `500 Internal Server Error`
