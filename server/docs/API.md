@@ -280,14 +280,6 @@ Creates recurring workout days for a program.
 
 Creates a new daily note for a specific workout day. Each workout day can have only one note. Used to store general feedback or observations for the day.
 
-**Authentication:** Required  
-**Headers:**
-
-```
-Authorization: Bearer <JWT_TOKEN>
-Content-Type: application/json
-```
-
 **URL Params**
 
 - `id` (string): UUID of the workout day to attach the note to
@@ -515,3 +507,40 @@ Authorization: Bearer <JWT_TOKEN>
 - `400 Bad Request` – Missing or invalid muscle_group_id
 - `401 Unauthorized`
 - `500 Internal Server Error`
+
+---
+
+Daily Note Routes
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+### `PATCH /daily-notes/:id`
+
+Edits the daily note for the workout day for the authenticated user.
+
+**Request Body**
+
+```json
+{
+  "note": "Updated note"
+}
+```
+
+**Reponse**
+
+- `200 OK`
+
+```json
+{
+  "id": "uuid",
+  "workout_day_id": "uuid",
+  "note": "Updated note"
+}
+```
+
+**Errors**
+
+- `400 Bad Request` - Missing or invalid note field
+- `401 Unauthorized`
+- `404 Not Found` – Daily note not found or doesn't belong to user
+- `500 Internal Servor Error`
