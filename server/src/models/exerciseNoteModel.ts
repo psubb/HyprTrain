@@ -11,3 +11,15 @@ export async function createExerciseNote(exerciseId: string, note: string): Prom
 
     return result.rows[0];
 }
+
+export async function editExerciseNote(id: string, note: string): Promise<ExerciseNote>{
+    const result = await pool.query(
+        `UPDATE exercise_notes
+        SET note = $1
+        WHERE id = $2
+        RETURNING *`,
+        [note, id]
+    );
+
+    return result.rows[0];
+}
