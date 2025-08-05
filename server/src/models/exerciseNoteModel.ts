@@ -23,3 +23,14 @@ export async function editExerciseNote(id: string, note: string): Promise<Exerci
 
     return result.rows[0];
 }
+
+export async function deleteExerciseNote(id: string): Promise<ExerciseNote | null>{
+    const result = await pool.query(
+        `DELETE FROM exercise_notes
+        WHERE id = $1
+        RETURNING *`,
+        [id]
+    );
+
+    return result.rows[0] || null;
+}

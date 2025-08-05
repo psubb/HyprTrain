@@ -651,3 +651,29 @@ Edits the exercise note for the workout exercise for the authenticated user.
 - `401 Unauthorized`
 - `404 Not Found` – Exercise note not found or doesn't belong to user
 - `500 Internal Server Error`
+
+### `DELETE /exercise-notes/:id`
+
+Deletes the exercise note for the specified workout exercise for the authenticated user.
+
+**URL Params**
+
+- `id` (string): UUID of the exercise note to delete
+
+**Response**
+
+- `200 OK`
+
+```json
+{
+  "id": "uuid",
+  "workout_day_id": "uuid",
+  "note": "Deleted note"
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
+- `404 Not Found` – Exercise note not found or doesn't belong to user
+- `500 Internal Server Error`
