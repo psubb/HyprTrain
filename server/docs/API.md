@@ -518,6 +518,10 @@ Daily Note Routes
 
 Edits the daily note for the workout day for the authenticated user.
 
+**URL Params**
+
+- `id` (string): UUID of the daily note to edit
+
 **Request Body**
 
 ```json
@@ -526,7 +530,7 @@ Edits the daily note for the workout day for the authenticated user.
 }
 ```
 
-**Reponse**
+**Response**
 
 - `200 OK`
 
@@ -543,4 +547,30 @@ Edits the daily note for the workout day for the authenticated user.
 - `400 Bad Request` - Missing or invalid note field
 - `401 Unauthorized`
 - `404 Not Found` – Daily note not found or doesn't belong to user
-- `500 Internal Servor Error`
+- `500 Internal Server Error`
+
+### `DELETE /daily-notes/:id`
+
+Deletes the daily note for the workout day for the authenticated user.
+
+**URL Params**
+
+- `id` (string): UUID of the daily note to delete
+
+**Response**
+
+- `200 OK`
+
+```json
+{
+  "id": "uuid",
+  "workout_day_id": "uuid",
+  "note": "Delted note"
+}
+```
+
+**Errors**
+
+- `401 Unauthorized`
+- `404 Not Found` – Daily note not found or doesn't belong to user
+- `500 Internal Server Error`

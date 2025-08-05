@@ -12,3 +12,14 @@ export async function editDailyNote(id: string, dailyNote: string): Promise<Dail
 
     return result.rows[0];
 }
+
+export async function deleteDailyNote(id: string): Promise<DailyNote | null>{
+    const result = await pool.query(
+        `DELETE FROM daily_notes
+        WHERE id = $1
+        RETURNING *`,
+        [id]
+    );
+
+    return result.rows[0] || null;
+}
