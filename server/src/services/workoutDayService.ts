@@ -1,5 +1,5 @@
 import { DailyNote } from "../types/DailyNote";
-import { activateNextWorkoutDay, insertWorkoutDay, getActiveWorkoutDayForUser, getWorkoutDayLog as getWorkoutDayLogModel, createDailyNote as createDailyNoteModel } from "../models/workoutDayModel";
+import { activateNextWorkoutDay, insertWorkoutDay, getActiveWorkoutDayForUser, getWorkoutDayLog as getWorkoutDayLogModel, createDailyNote as createDailyNoteModel, markWorkoutDayComplete as markWorkoutDayCompleteModel, getProgramIdFromWorkoutDay } from "../models/workoutDayModel";
 import { WorkoutDay } from "../types/WorkoutDay";
 import { WorkoutDayLog } from "../types/WorkoutDayLog";
 
@@ -32,4 +32,12 @@ export async function getWorkoutDayLog(userId: string, workoutDayId: string): Pr
 export async function createDailyNote(workoutDayId: string, note: string): Promise<DailyNote> {
     const dailyNote = await createDailyNoteModel(workoutDayId, note);
     return dailyNote;
+}
+
+export async function markWorkoutDayComplete(workoutDayId: string): Promise<WorkoutDay>{
+    const completedDay = await markWorkoutDayCompleteModel(workoutDayId);
+    // Activate next Day
+    const programId = await getProgramIdFromWorkoutDay(workoutDayId);
+    const nextDay = await activateNextWorkoutDay(programId);
+    return completedDay;
 }

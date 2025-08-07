@@ -311,6 +311,37 @@ Creates a new daily note for a specific workout day. Each workout day can have o
 - `404 Not Found` – Workout day not found or doesn't belong to user
 - `500 Internal Server Error`
 
+### `PATCH /workout-days/:id/complete`
+
+Marks a specific workout day as completed and deactivates it. Automatically activates the next available uncompleted workout day in the same program (based on chronological order).
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+**URL Params**
+
+- `id` (string): UUID of the workout day to mark as complete
+
+**Response**
+
+- `200 OK`
+
+```json
+{
+  "id": "uuid",
+  "program_id": "uuid",
+  "day_of_week": 1,
+  "week_number": 2,
+  "is_completed": true,
+  "is_active": false
+}
+```
+
+**Errors**
+
+- `400 Bad Request` – Missing workout day ID
+- `401 Unauthorized`
+- `404 Not Found` – Workout day not found or doesn't belong to user
+- `500 Internal Server Error`
 
 ---
 

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService, getWorkoutDayLog as getWorkoutDayService, createDailyNote as createDailyNoteService } from '../services/workoutDayService';
+import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService, getWorkoutDayLog as getWorkoutDayService, createDailyNote as createDailyNoteService, markWorkoutDayComplete as markWorkoutDayCompleteService } from '../services/workoutDayService';
 
 export async function addWorkoutDays(req: Request, res: Response): Promise<void> {
     const userId = req.user?.userId;
@@ -103,5 +103,28 @@ export async function createDailyNote(req: Request, res: Response){
         res.status(201).json(dailyNote);
     } catch (err: any){
         res.status(500).json({message: err.message || "Error creating daily note"});
+    }
+}
+
+export async function markWorkoutDayComplete(req: Request, res: Response){
+    const userId = req.user?.userId;
+
+    if (!userId){
+        res.status(401).json({message: 'Unauthorized: No user ID found.'});
+        return; 
+    }
+
+    const workoutDayId = req.params.id;
+
+    if (!workoutDayId){
+        res.status(400).json({message: 'Missing workoutDayId in URL'});
+        return;
+    }
+
+    try {
+        const completedDay = await markWorkoutDayCompleteService(workoutDayId);
+        res.status(200).json(completedDay);
+    } catch (err: any){
+        res.status(500).json({message: err.message || "Error completing day"});
     }
 }

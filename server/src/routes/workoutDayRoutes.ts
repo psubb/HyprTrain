@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { addWorkoutDays, getActiveWorkoutDay, getWorkoutDayLog, createDailyNote } from '../controllers/workoutDayController';
+import { addWorkoutDays, getActiveWorkoutDay, getWorkoutDayLog, createDailyNote, markWorkoutDayComplete } from '../controllers/workoutDayController';
 import { authenticateAccessToken } from '../middleware/authMiddleware';
 
 const router: Router = express.Router();
@@ -11,5 +11,6 @@ router.get("/programs/:id/active-day", authenticateAccessToken, getActiveWorkout
 // Workout Day logging
 router.get("/workout-days/:id/log", authenticateAccessToken, getWorkoutDayLog);
 router.post("/workout-days/:id/daily-note", authenticateAccessToken, createDailyNote);
+router.patch("/workout-days/:id/complete", authenticateAccessToken, markWorkoutDayComplete);
 
 export default router;

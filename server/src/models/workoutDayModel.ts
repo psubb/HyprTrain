@@ -235,3 +235,15 @@ export async function getFutureWorkoutDayIds(programId: string, dayOfWeek: numbe
 
     return result.rows.map(row => row.id);
 }
+
+export async function markWorkoutDayComplete(workoutDayId: string): Promise<WorkoutDay>{
+    const result = await pool.query(
+        `UPDATE workout_days
+        SET is_completed = $1, is_active = $2
+        WHERE id = $3
+        RETURNING *`,
+        [true, false, workoutDayId]
+    );
+
+    return result.rows[0];
+}
