@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createProgram as createProgramService, getActiveProgram as getActiveProgramService} from '../services/programService';
+import { createProgram as createProgramService, getActiveProgram as getActiveProgramService, getProgramsForUser as getProgramsForUserService} from '../services/programService';
 import { getWorkoutWeekOverview as getWorkoutWeekOverviewService } from '../services/workoutDayService';
 
 export async function createProgram(req: Request, res: Response): Promise<void> {
@@ -65,5 +65,21 @@ export async function getWorkoutWeekOverview(req: Request, res: Response){
         res.status(200).json(workoutWeekOverview);
     } catch (err: any){
         res.status(500).json({message: err.message || "Error retrieving workout week overview"});
+    }
+}
+
+export async function getProgramsForUser(req: Request, res: Response){
+    const userId = req.user?.userId;
+
+    if (!userId){
+        res.status(401).json({message: 'Unauthorized: No user ID found.'});
+        return; 
+    }
+
+    try {
+        const programs = await getProgramsForUserService(userId);
+        res.status(200).json(programs);
+    } catch (err: any){
+        res.status(500).json({message: err.message || "Error when trying to retrieve programs"});
     }
 }

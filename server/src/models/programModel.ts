@@ -42,3 +42,14 @@ export async function getActiveProgramForUser(userId: string): Promise<Program |
 
     return result.rows[0] || null;
 }
+
+export async function getProgramsForUser(userId: string): Promise<Program[]>{
+    const result = await pool.query(
+        `SELECT * FROM programs
+        WHERE user_id = $1
+        ORDER BY created_at DESC`,
+        [userId]
+    );
+
+    return result.rows;
+}

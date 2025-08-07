@@ -295,6 +295,35 @@ Retrieves the full overview of a selected week in a program for the authenticate
 - `403 Forbidden` – Program not found or does not belong to user
 - `500 Internal Server Error`
 
+### `GET /programs`
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+Retrieves a list of all programs owned by the authenticated user, ordered by most recently created.
+
+**Response**
+- `200 OK`
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Push Pull Legs",
+    "duration_weeks": 12,
+    "created_at": "2025-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "uuid",
+    "name": "Upper/Lower Split",
+    "duration_weeks": 8,
+    "created_at": "2025-06-20T00:00:00.000Z"
+  }
+]
+```
+
+**Errors**
+- `401 Unauthorized` – Missing or invalid token
+- `500 Internal Server Error`
+
 ---
 
 ## Workout Day Routes
