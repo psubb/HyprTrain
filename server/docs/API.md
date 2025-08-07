@@ -726,3 +726,101 @@ Creates a log for the exercise set for the authenticated user.
 - `401 Unauthorized`
 - `404 Not Found` – Exercise set log not found or doesn't belong to user
 - `500 Internal Server Error`
+
+---
+
+### `POST /workout-exercises/:id/sets`
+
+Adds a new blank set to the specified workout exercise. Optionally propagates the new set to future weeks of the same program on the same day of the week for the same exercise.
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+**URL Params**
+
+- `id` (string): UUID of the workout exercise to add the set to
+
+**Request Body**
+
+```json
+{
+  "propagate": false
+}
+```
+
+- `propagate` (boolean): Optional. If `true`, the new set will be added to the current workout exercise and all future workout_exercise entries that match the same `exercise_id` and `day_of_week` in future weeks of the same program.
+
+**Response**
+
+- `201 Created`
+
+```json
+[
+  {
+    "id": "uuid",
+    "workout_exercise_id": "uuid",
+    "set_number": 3
+  },
+  {
+    "id": "uuid",
+    "workout_exercise_id": "uuid",
+    "set_number": 3
+  }
+]
+```
+
+Returns an array of all sets created. If `propagate` is `false`, only one set will be returned.
+
+**Errors**
+
+- `400 Bad Request` – Missing or invalid workout exercise ID
+- `401 Unauthorized`
+- `404 Not Found` – Workout exercise not found or doesn’t belong to user
+- `500 Internal Server Error`
+
+### `DELETE /workout-exercises/:id/sets/last`
+
+Deletes the most recent (last) set for the specified workout exercise. Optionally propagates the deletion to all future workout days for the same program, same day of the week, and same exercise.
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+**URL Params**
+
+- `id` (string): UUID of the `workout_exercise` to delete the last set from
+
+**Request Body**
+
+```json
+{
+  "propagate": false
+}
+```
+
+- `propagate` (boolean): Optional. If `true`, the last set will be deleted from the current workout exercise and from all future workout exercises that match the same exercise and weekday in the same program.
+
+**Response**
+
+- `200 OK`
+
+```json
+[
+  {
+    "id": "uuid",
+    "workout_exercise_id": "uuid",
+    "set_number": 3
+  },
+  {
+    "id": "uuid",
+    "workout_exercise_id": "uuid",
+    "set_number": 3
+  }
+]
+```
+
+Returns an array of all sets that were deleted. If `propagate` is `false`, only one set will be deleted and returned.
+
+**Errors**
+
+- `400 Bad Request` – Missing or invalid workout exercise ID
+- `401 Unauthorized`
+- `404 Not Found` – No set found to delete or workout exercise does not belong to user
+- `500 Internal Server Error`

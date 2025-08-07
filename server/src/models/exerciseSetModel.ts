@@ -25,3 +25,14 @@ export async function getLastSetNumberForWorkoutExercise(workoutExerciseId: stri
     const max = result.rows[0].max;
     return max !== null ? max : 0;
 }
+
+export async function deleteExerciseSet(workoutExerciseId: string, setNumber: number): Promise<ExerciseSet> {
+    const result = await pool.query(
+        `DELETE FROM exercise_sets
+        WHERE workout_exercise_id = $1 AND set_number = $2
+        RETURNING *`,
+        [workoutExerciseId, setNumber]
+    );
+
+    return result.rows[0];
+}
