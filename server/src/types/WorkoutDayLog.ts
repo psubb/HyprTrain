@@ -19,7 +19,7 @@ export interface WorkoutDayLog {
     id: string; // exercise_set_id
     set_number: number;
     log: ExerciseSetLog | null;
-    previous_log: ExerciseSetLog | null;
+    previous_log?: ExerciseSetLog | null;
   }
   
   export interface ExerciseSetLog {

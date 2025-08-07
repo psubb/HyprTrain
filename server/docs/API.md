@@ -240,6 +240,60 @@ Authorization: Bearer <JWT_TOKEN>
 - `404 Not Found` – Workout day not found or doesn't belong to user
 - `500 Internal Server Error`
 
+### `GET /programs/:id/weeks/:selectedWeek`
+
+> Requires Header: `Authorization: Bearer <JWT_TOKEN>`
+
+Retrieves the full overview of a selected week in a program for the authenticated user. This includes all workout days in that week, each with their exercises, sets, logs, and any notes.
+
+**URL Params**
+- `id` (string): UUID of the program
+- `selectedWeek` (number): The week number (1-based index) to retrieve
+
+**Response**
+- `200 OK`
+```json
+{
+  "week_number": 2,
+  "days": [
+    {
+      "id": "uuid",
+      "day_of_week": 1,
+      "is_completed": true,
+      "daily_note": "Felt strong",
+      "exercises": [
+        {
+          "id": "uuid",
+          "exercise_id": "uuid",
+          "name": "Bench Press",
+          "order_index": 0,
+          "note": "Keep elbows tucked",
+          "sets": [
+            {
+              "id": "uuid",
+              "set_number": 1,
+              "log": {
+                "reps": 10,
+                "weight": 135.0,
+                "rpe": 8,
+                "completed": true
+              }
+            },
+            ...
+          ]
+        }
+      ]
+    },
+    ...
+  ]
+}
+```
+
+**Errors**
+- `400 Bad Request` – Invalid week number
+- `401 Unauthorized` – Missing or invalid token
+- `403 Forbidden` – Program not found or does not belong to user
+- `500 Internal Server Error`
 
 ---
 

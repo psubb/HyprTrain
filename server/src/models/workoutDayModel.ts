@@ -247,3 +247,125 @@ export async function markWorkoutDayComplete(workoutDayId: string): Promise<Work
 
     return result.rows[0];
 }
+
+export async function getWorkoutDayOverview(userId: string, workoutDayId: string): Promise<WorkoutDayLog | null> {
+    // Step 1: Get workout_day, daily_note, and basic day info
+    const dayResult = await pool.query(
+        `
+        SELECT wd.id, wd.week_number, wd.day_of_week, dn.note AS daily_note, wd.program_id
+        FROM workout_days wd
+        LEFT JOIN daily_notes dn ON dn.workout_day_id = wd.id
+        JOIN programs p ON wd.program_id = p.id
+        WHERE wd.id = $1 AND p.user_id = $2
+        `,
+        [workoutDayId, userId]
+    );
+
+    const day = dayResult.rows[0];
+    if (!day) return null;
+
+    const { week_number, day_of_week, program_id } = day;
+
+    // Step 2: Get exercises, sets, current logs, and notes
+    const exResult = await pool.query(
+        `
+        SELECT
+            we.id AS workout_exercise_id,
+            we.exercise_id,
+            we.order_index,
+            e.name AS exercise_name,
+            en.note AS exercise_note,
+            es.id AS set_id,
+            es.set_number,
+            el.reps,
+            el.weight,
+            el.rpe,
+            el.is_completed
+        FROM workout_exercises we
+        JOIN exercises e ON e.id = we.exercise_id
+        LEFT JOIN exercise_notes en ON en.workout_exercise_id = we.id
+        JOIN exercise_sets es ON es.workout_exercise_id = we.id
+        LEFT JOIN exercise_logs el ON el.exercise_set_id = es.id
+        WHERE we.workout_day_id = $1
+        ORDER BY we.order_index, es.set_number
+        `,
+        [workoutDayId]
+    );
+
+    const exerciseMap = new Map<string, WorkoutDayExerciseLog>();
+
+    for (const row of exResult.rows) {
+        const exId = row.workout_exercise_id;
+        if (!exerciseMap.has(exId)) {
+            exerciseMap.set(exId, {
+                id: exId,
+                exercise_id: row.exercise_id,
+                name: row.exercise_name,
+                order_index: row.order_index,
+                note: row.exercise_note,
+                sets: [],
+            });
+        }
+
+        const log: ExerciseSetLog | null = row.reps !== null ? {
+            reps: row.reps,
+            weight: parseFloat(row.weight),
+            rpe: row.rpe !== null ? parseFloat(row.rpe) : null,
+            completed: row.is_completed,
+        } : null;
+
+        const set: WorkoutDaySetLog = {
+            id: row.set_id,
+            set_number: row.set_number,
+            log,
+        };
+
+        exerciseMap.get(exId)!.sets.push(set);
+    }
+
+    // Final structure
+    const result: WorkoutDayLog = {
+        id: workoutDayId,
+        week_number: day.week_number,
+        day_of_week: day.day_of_week,
+        daily_note: day.daily_note,
+        exercises: Array.from(exerciseMap.values()),
+    };
+
+    return result;
+}
+
+export async function getWorkoutWeekOverview(userId: string, programId: string, weekNumber: number): Promise<{ week_number: number; days: WorkoutDayLog[] } | null>{
+    // Step 1: Make sure the program belongs to the user
+  const programCheck = await pool.query(
+    `SELECT id FROM programs WHERE id = $1 AND user_id = $2`,
+    [programId, userId]
+  );
+
+  if (programCheck.rowCount === 0) return null;
+
+  // Step 2: Get all workout_days for the week
+  const daysResult = await pool.query(
+    `
+    SELECT id
+    FROM workout_days
+    WHERE program_id = $1 AND week_number = $2
+    ORDER BY day_of_week
+    `,
+    [programId, weekNumber]
+  );
+
+  const days: WorkoutDayLog[] = [];
+
+  for (const row of daysResult.rows) {
+    const dayLog = await getWorkoutDayOverview(userId, row.id);
+    if (dayLog) {
+      days.push(dayLog);
+    }
+  }
+
+  return {
+    week_number: weekNumber,
+    days,
+  };
+} 

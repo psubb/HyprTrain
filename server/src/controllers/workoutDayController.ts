@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
-import { createWorkoutDaysForProgram, getActiveWorkoutDay as getActiveWorkoutDayService, getWorkoutDayLog as getWorkoutDayService, createDailyNote as createDailyNoteService, markWorkoutDayComplete as markWorkoutDayCompleteService } from '../services/workoutDayService';
+import { createWorkoutDaysForProgram, 
+         getActiveWorkoutDay as getActiveWorkoutDayService, 
+         getWorkoutDayLog as getWorkoutDayService, 
+         createDailyNote as createDailyNoteService, 
+         markWorkoutDayComplete as markWorkoutDayCompleteService
+        } from '../services/workoutDayService';
 
 export async function addWorkoutDays(req: Request, res: Response): Promise<void> {
     const userId = req.user?.userId;

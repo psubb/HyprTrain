@@ -1,5 +1,14 @@
 import { DailyNote } from "../types/DailyNote";
-import { activateNextWorkoutDay, insertWorkoutDay, getActiveWorkoutDayForUser, getWorkoutDayLog as getWorkoutDayLogModel, createDailyNote as createDailyNoteModel, markWorkoutDayComplete as markWorkoutDayCompleteModel, getProgramIdFromWorkoutDay } from "../models/workoutDayModel";
+import { activateNextWorkoutDay,
+         insertWorkoutDay,
+         getActiveWorkoutDayForUser,
+         getWorkoutDayLog as getWorkoutDayLogModel,
+         createDailyNote as createDailyNoteModel, 
+         markWorkoutDayComplete as markWorkoutDayCompleteModel, 
+         getProgramIdFromWorkoutDay,
+         getWorkoutDayOverview as getWorkoutDayOverviewModel,
+         getWorkoutWeekOverview as getWorkoutWeekOverviewModel 
+        } from "../models/workoutDayModel";
 import { WorkoutDay } from "../types/WorkoutDay";
 import { WorkoutDayLog } from "../types/WorkoutDayLog";
 
@@ -40,4 +49,9 @@ export async function markWorkoutDayComplete(workoutDayId: string): Promise<Work
     const programId = await getProgramIdFromWorkoutDay(workoutDayId);
     const nextDay = await activateNextWorkoutDay(programId);
     return completedDay;
+}
+
+export async function getWorkoutWeekOverview(userId: string, programId: string, weekNumber: number): Promise<{week_number: number; days: WorkoutDayLog[] } | null>{
+    const workoutWeekOverview = await getWorkoutWeekOverviewModel(userId, programId, weekNumber);
+    return workoutWeekOverview;
 }
