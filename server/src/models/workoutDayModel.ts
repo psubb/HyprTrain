@@ -225,3 +225,13 @@ export async function createDailyNote(workoutDayId: string, note: string): Promi
 
     return result.rows[0];
 }
+
+export async function getFutureWorkoutDayIds(programId: string, dayOfWeek: number, currentWeek: number): Promise<string[]>{
+    const result = await pool.query(
+        `SELECT id FROM workout_days
+        WHERE program_id = $1 AND day_of_week = $2 AND week_number > $3`,
+        [programId, dayOfWeek, currentWeek]
+    );
+
+    return result.rows.map(row => row.id);
+}

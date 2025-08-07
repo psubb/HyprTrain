@@ -14,3 +14,14 @@ export async function insertExerciseSet(workoutExerciseId: string, setNumber: nu
 
     return results.rows[0];
 }
+
+export async function getLastSetNumberForWorkoutExercise(workoutExerciseId: string): Promise<number> {
+    const result = await pool.query(
+        `SELECT MAX(set_number) AS max FROM exercise_sets
+        WHERE workout_exercise_id = $1`,
+        [workoutExerciseId]
+    );
+    
+    const max = result.rows[0].max;
+    return max !== null ? max : 0;
+}
