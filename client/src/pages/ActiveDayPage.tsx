@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { showToast } from "@/components/ui/toast";
 
 type Program = {
   id: string;
@@ -89,6 +90,7 @@ export default function ActiveDayPage() {
   // Dialog states
   const [showAddSetDialog, setShowAddSetDialog] = useState(false);
   const [showRemoveSetDialog, setShowRemoveSetDialog] = useState(false);
+  const [showCompleteWorkoutDialog, setShowCompleteWorkoutDialog] = useState(false);
   const [pendingSetAction, setPendingSetAction] = useState<{
     workoutExerciseId: string;
     action: 'add' | 'remove';
@@ -175,8 +177,15 @@ export default function ActiveDayPage() {
         };
         setDayLog(updatedDayLog);
       }
+      
+      // Show success toast
+      const weightText = weight ? ` @ ${weight}lbs` : '';
+      const rpeText = rpe ? ` (RPE ${rpe})` : '';
+      showToast.success(`Set logged: ${reps} reps${weightText}${rpeText}`);
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to log set");
+      const errorMsg = e?.response?.data?.message || "Failed to log set";
+      setError(errorMsg);
+      showToast.error(errorMsg);
     }
   };
 
@@ -207,8 +216,14 @@ export default function ActiveDayPage() {
         };
         setDayLog(updatedDayLog);
       }
+      
+      // Show success toast
+      const propagateText = propagate ? " (applied to all future workouts)" : "";
+      showToast.success(`Set added successfully${propagateText}`);
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to add set");
+      const errorMsg = e?.response?.data?.message || "Failed to add set";
+      setError(errorMsg);
+      showToast.error(errorMsg);
     }
   };
 
@@ -236,8 +251,14 @@ export default function ActiveDayPage() {
         };
         setDayLog(updatedDayLog);
       }
+      
+      // Show success toast
+      const propagateText = propagate ? " (applied to all future workouts)" : "";
+      showToast.success(`Set removed successfully${propagateText}`);
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to remove set");
+      const errorMsg = e?.response?.data?.message || "Failed to remove set";
+      setError(errorMsg);
+      showToast.error(errorMsg);
     }
   };
 
@@ -272,6 +293,7 @@ export default function ActiveDayPage() {
     
     try {
       let dailyNoteId = dayLog.daily_note_id;
+      const isUpdate = !!dayLog.daily_note_id;
       
       if (dayLog.daily_note_id) {
         // Update existing note using PATCH
@@ -293,13 +315,22 @@ export default function ActiveDayPage() {
         daily_note_id: dailyNoteId
       });
       setEditingNote(null);
+      
+      // Show success toast
+      showToast.success(`Daily note ${isUpdate ? 'updated' : 'added'} successfully`);
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to save daily note");
+      const errorMsg = e?.response?.data?.message || "Failed to save daily note";
+      setError(errorMsg);
+      showToast.error(errorMsg);
     }
   };
 
   const saveExerciseNote = async (workoutExerciseId: string) => {
     try {
+      // Find the current exercise to determine if it's an update or new note
+      const currentExercise = dayLog?.exercises.find(ex => ex.id === workoutExerciseId);
+      const isUpdate = !!currentExercise?.note;
+      
       await api.post(`/workout-exercises/${workoutExerciseId}/note`, {
         note: newExerciseNote
       });
@@ -322,21 +353,36 @@ export default function ActiveDayPage() {
       
       setEditingExerciseNote(null);
       setNewExerciseNote("");
+      
+      // Show success toast
+      showToast.success(`Exercise note ${isUpdate ? 'updated' : 'added'} successfully`);
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to save exercise note");
+      const errorMsg = e?.response?.data?.message || "Failed to save exercise note";
+      setError(errorMsg);
+      showToast.error(errorMsg);
     }
   };
 
-  const completeWorkout = async () => {
+  const handleCompleteWorkoutClick = () => {
+    setShowCompleteWorkoutDialog(true);
+  };
+
+  const confirmCompleteWorkout = async () => {
     if (!activeDayMeta) return;
     
+    setShowCompleteWorkoutDialog(false);
     setSavingWorkout(true);
     try {
       await api.patch(`/workout-days/${activeDayMeta.id}/complete`);
       // Reload data to get the next active day instead of navigating away
       await loadData();
+      
+      // Show success toast
+      showToast.success("Workout completed successfully! 🎉");
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Failed to complete workout");
+      const errorMsg = e?.response?.data?.message || "Failed to complete workout";
+      setError(errorMsg);
+      showToast.error(errorMsg);
     } finally {
       setSavingWorkout(false);
     }
@@ -493,7 +539,7 @@ export default function ActiveDayPage() {
               Ready to finish your workout?
             </div>
             <Button
-              onClick={completeWorkout}
+              onClick={handleCompleteWorkoutClick}
               disabled={savingWorkout}
               size="lg"
               className="bg-red-500 hover:bg-red-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-medium tracking-wide transition-all duration-200 w-full disabled:opacity-50"
@@ -561,6 +607,41 @@ export default function ActiveDayPage() {
               className="w-full order-1 sm:order-2 sm:w-auto text-sm"
             >
               All Future Workouts
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Complete Workout Confirmation Dialog */}
+      <Dialog open={showCompleteWorkoutDialog} onOpenChange={setShowCompleteWorkoutDialog}>
+        <DialogContent className="mx-2 sm:mx-4 max-w-md w-[calc(100vw-1rem)] sm:w-full">
+          <DialogHeader>
+            <DialogTitle className="text-base sm:text-lg md:text-xl">Complete Workout?</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm md:text-base leading-relaxed">
+              Are you sure you want to complete this workout? This action will mark all exercises as finished and move you to the next workout day.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-3 sm:flex-row sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCompleteWorkoutDialog(false)}
+              className="w-full order-2 sm:order-1 sm:w-auto text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmCompleteWorkout}
+              disabled={savingWorkout}
+              className="w-full order-1 sm:order-2 sm:w-auto text-sm bg-red-500 hover:bg-red-600"
+            >
+              {savingWorkout ? (
+                <>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                  Completing...
+                </>
+              ) : (
+                "Complete Workout"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
