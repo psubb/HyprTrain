@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Toaster } from "sonner";
 
 export default function AppLayout() {
   const navigate = useNavigate();
@@ -190,6 +191,18 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <Toaster 
+        position="top-right" 
+        richColors={false}
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: 'rgb(17 24 39)',
+            border: '1px solid rgb(55 65 81)',
+            color: 'rgb(243 244 246)',
+          },
+        }}
+      />
     </div>
   );
 }

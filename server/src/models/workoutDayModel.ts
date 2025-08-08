@@ -17,7 +17,7 @@ export async function insertWorkoutDay(programId: string, dayOfWeek: number, wee
 }
 
 export async function activateNextWorkoutDay(programId: string){
-    await pool.query(
+    const result = await pool.query(
         `UPDATE workout_days
         SET is_active = TRUE
         WHERE id = (
@@ -28,6 +28,15 @@ export async function activateNextWorkoutDay(programId: string){
         )`,
         [programId]
     );
+
+    // If no rows were updated, it means all workout days are completed
+    // Deactivate the program
+    if (result.rowCount === 0) {
+        await pool.query(
+            `UPDATE programs SET is_active = FALSE WHERE id = $1`,
+            [programId]
+        );
+    }
 }
 
 export async function getProgramIdFromWorkoutDay(workoutDayID: string): Promise<string> {

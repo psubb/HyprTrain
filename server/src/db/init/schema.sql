@@ -18,9 +18,14 @@ CREATE TABLE exercises (
     is_default BOOLEAN DEFAULT FALSE,
     is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (muscle_group_id) REFERENCES muscle_groups(id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE (name, user_id)
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Unique constraint that only applies to non-deleted exercises
+-- This allows users to recreate exercises with the same name after deleting them
+CREATE UNIQUE INDEX exercises_name_user_id_not_deleted_unique 
+ON exercises (name, user_id) 
+WHERE is_deleted = false;
 
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

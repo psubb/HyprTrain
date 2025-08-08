@@ -19,14 +19,30 @@ export async function insertCustomExercise(userId: string, exerciseName: string,
 export async function findExerciseByNameForUser(userId: string, exerciseName: string): Promise<Exercise | null> {
     const result = await pool.query(
     `SELECT * FROM exercises
-    WHERE name ILIKE $1 AND (user_id = $2 OR user_id IS NULL)`,
+    WHERE name ILIKE $1 AND (user_id = $2 OR is_default = true) AND is_deleted = false`,
     [exerciseName, userId]
     );
 
     return result.rows[0] || null;
 }
 
+export async function checkExerciseInUse(exerciseId: string): Promise<boolean> {
+    const result = await pool.query(
+        `SELECT COUNT(*) as count FROM workout_exercises 
+        WHERE exercise_id = $1`,
+        [exerciseId]
+    );
+    
+    return parseInt(result.rows[0].count) > 0;
+}
+
 export async function softDeleteExerciseById(userId: string, exerciseId: string): Promise<Exercise | null> {
+    // Check if exercise is in use
+    const inUse = await checkExerciseInUse(exerciseId);
+    if (inUse) {
+        throw new Error("Cannot delete exercise that is currently being used in workouts");
+    }
+
     const result = await pool.query(
         `UPDATE exercises
         SET is_deleted = true
