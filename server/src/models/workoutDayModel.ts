@@ -79,7 +79,7 @@ export async function getWorkoutDayLog(userId: string, workoutDayId: string): Pr
     // Step 1: Get workout_day, daily_note, and basic day info
     const dayResult = await pool.query(
         `
-        SELECT wd.id, wd.week_number, wd.day_of_week, dn.note AS daily_note, wd.program_id
+        SELECT wd.id, wd.week_number, wd.day_of_week, dn.note AS daily_note, dn.id AS daily_note_id, wd.program_id
         FROM workout_days wd
         LEFT JOIN daily_notes dn ON dn.workout_day_id = wd.id
         JOIN programs p ON wd.program_id = p.id
@@ -101,6 +101,7 @@ export async function getWorkoutDayLog(userId: string, workoutDayId: string): Pr
             we.exercise_id,
             we.order_index,
             e.name AS exercise_name,
+            mg.name AS muscle_group_name,
             en.note AS exercise_note,
             es.id AS set_id,
             es.set_number,
@@ -110,6 +111,7 @@ export async function getWorkoutDayLog(userId: string, workoutDayId: string): Pr
             el.is_completed
         FROM workout_exercises we
         JOIN exercises e ON e.id = we.exercise_id
+        JOIN muscle_groups mg ON mg.id = e.muscle_group_id
         LEFT JOIN exercise_notes en ON en.workout_exercise_id = we.id
         JOIN exercise_sets es ON es.workout_exercise_id = we.id
         LEFT JOIN exercise_logs el ON el.exercise_set_id = es.id
@@ -128,6 +130,7 @@ export async function getWorkoutDayLog(userId: string, workoutDayId: string): Pr
                 id: exId,
                 exercise_id: row.exercise_id,
                 name: row.exercise_name,
+                muscle_group_name: row.muscle_group_name,
                 order_index: row.order_index,
                 note: row.exercise_note,
                 sets: [],
@@ -209,6 +212,7 @@ export async function getWorkoutDayLog(userId: string, workoutDayId: string): Pr
         week_number: day.week_number,
         day_of_week: day.day_of_week,
         daily_note: day.daily_note,
+        daily_note_id: day.daily_note_id,
         exercises: Array.from(exerciseMap.values()),
     };
 
@@ -252,7 +256,7 @@ export async function getWorkoutDayOverview(userId: string, workoutDayId: string
     // Step 1: Get workout_day, daily_note, and basic day info
     const dayResult = await pool.query(
         `
-        SELECT wd.id, wd.week_number, wd.day_of_week, dn.note AS daily_note, wd.program_id
+        SELECT wd.id, wd.week_number, wd.day_of_week, dn.note AS daily_note, dn.id AS daily_note_id, wd.program_id
         FROM workout_days wd
         LEFT JOIN daily_notes dn ON dn.workout_day_id = wd.id
         JOIN programs p ON wd.program_id = p.id
@@ -274,6 +278,7 @@ export async function getWorkoutDayOverview(userId: string, workoutDayId: string
             we.exercise_id,
             we.order_index,
             e.name AS exercise_name,
+            mg.name AS muscle_group_name,
             en.note AS exercise_note,
             es.id AS set_id,
             es.set_number,
@@ -283,6 +288,7 @@ export async function getWorkoutDayOverview(userId: string, workoutDayId: string
             el.is_completed
         FROM workout_exercises we
         JOIN exercises e ON e.id = we.exercise_id
+        JOIN muscle_groups mg ON mg.id = e.muscle_group_id
         LEFT JOIN exercise_notes en ON en.workout_exercise_id = we.id
         JOIN exercise_sets es ON es.workout_exercise_id = we.id
         LEFT JOIN exercise_logs el ON el.exercise_set_id = es.id
@@ -301,6 +307,7 @@ export async function getWorkoutDayOverview(userId: string, workoutDayId: string
                 id: exId,
                 exercise_id: row.exercise_id,
                 name: row.exercise_name,
+                muscle_group_name: row.muscle_group_name,
                 order_index: row.order_index,
                 note: row.exercise_note,
                 sets: [],
@@ -329,6 +336,7 @@ export async function getWorkoutDayOverview(userId: string, workoutDayId: string
         week_number: day.week_number,
         day_of_week: day.day_of_week,
         daily_note: day.daily_note,
+        daily_note_id: day.daily_note_id,
         exercises: Array.from(exerciseMap.values()),
     };
 

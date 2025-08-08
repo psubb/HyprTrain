@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "@/api/http";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Program = {
   id: string;
@@ -33,7 +35,7 @@ type WeekExercise = {
 
 type WeekDay = {
   id: string;
-  day_of_week: number; // 1..7
+  day_of_week: number; // 0..6 (0=Monday, 6=Sunday)
   is_completed: boolean;
   daily_note?: string | null;
   exercises: WeekExercise[];
@@ -98,89 +100,178 @@ export default function ProgramDetailPage() {
 
   const dayLabel = (n: number) => {
     const map = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const idx = Math.max(1, Math.min(7, n)) - 1;
+    const idx = Math.max(0, Math.min(6, n));
     return map[idx];
   };
 
-  if (!id) return <div className="text-red-500">No program id in URL.</div>;
+  if (!id) return (
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black flex items-center justify-center">
+      <div className="text-red-400 p-4 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm">
+        No program id in URL.
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-4">
-      {/* Header + Week selector */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {loadingMeta ? "Loading…" : meta?.name ?? "Program"}
-          </h1>
-          {!loadingMeta && meta && (
-            <p className="text-zinc-400 text-sm">{meta.duration_weeks} weeks</p>
-          )}
-        </div>
-
-        <select
-          value={week}
-          onChange={(e) => setWeek(Number(e.target.value))}
-          className="bg-zinc-900 border border-zinc-800 rounded px-3 py-2"
-          disabled={loadingMeta || !meta || !weekOptions.length}
-        >
-          {weekOptions.map((w) => (
-            <option key={w} value={w}>
-              Week {w}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {error && <div className="text-red-500">{error}</div>}
-      {loadingWeek && <div>Loading week…</div>}
-      {!loadingWeek && !error && !data && (
-        <div className="text-zinc-400">No data for this week.</div>
-      )}
-
-      {!loadingWeek && !error && data && (
-        <div className="space-y-4">
-          {data.days.map((day) => (
-            <div key={day.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="font-medium mb-2 flex items-center gap-2">
-                <span>{dayLabel(day.day_of_week)}</span>
-                {day.is_completed && (
-                  <span className="text-xs text-zinc-400">(completed)</span>
-                )}
-              </div>
-
-              {day.daily_note && (
-                <div className="text-xs text-zinc-400 mb-2">Note: {day.daily_note}</div>
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black">
+      <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8 sm:space-y-12">
+        {/* Header Section */}
+        <div className="text-center space-y-6 py-8 sm:py-12">
+          <div className="space-y-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light text-white tracking-tight">
+              {loadingMeta ? (
+                "Loading..."
+              ) : (
+                <>
+                  <span className="font-medium text-red-400">{meta?.name ?? "Program"}</span>
+                </>
               )}
-
-              <div className="space-y-3">
-                {day.exercises.map((ex) => (
-                  <div key={ex.id} className="border border-zinc-800 rounded p-3">
-                    <div className="font-medium">{ex.name}</div>
-                    {ex.note && (
-                      <div className="text-xs text-zinc-400 mt-1">Note: {ex.note}</div>
-                    )}
-
-                    <ul className="text-sm text-zinc-300 mt-2 space-y-1">
-                      {ex.sets.map((s) => (
-                        <li key={s.id}>
-                          Set {s.set_number}:{" "}
-                          {s.log
-                            ? `${s.log.reps} reps${
-                                typeof s.log.weight === "number" ? ` @ ${s.log.weight}` : ""
-                              }${
-                                typeof s.log.rpe === "number" ? ` (RPE ${s.log.rpe})` : ""
-                              }${s.log.completed ? " ✓" : ""}`
-                            : "—"}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+            </h1>
+            {!loadingMeta && meta && (
+              <div className="flex items-center justify-center gap-3 text-gray-400">
+                <span>{meta.duration_weeks} weeks</span>
+                <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                <span>Created {new Date(meta.created_at).toLocaleDateString()}</span>
               </div>
-            </div>
-          ))}
+            )}
+          </div>
+
+          {/* Week Selector */}
+          <div className="max-w-xs mx-auto">
+            <Select 
+              value={week.toString()} 
+              onValueChange={(value) => setWeek(Number(value))}
+              disabled={loadingMeta || !meta || !weekOptions.length}
+            >
+              <SelectTrigger className="bg-gray-950/50 border-gray-700 text-white hover:border-red-500/50 focus:border-red-500/50">
+                <SelectValue placeholder="Select week" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-700">
+                {weekOptions.map((w) => (
+                  <SelectItem 
+                    key={w} 
+                    value={w.toString()} 
+                    className="text-white hover:bg-red-500/20 focus:bg-red-500/20"
+                  >
+                    Week {w}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-red-400 p-4 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loadingWeek && (
+          <div className="flex justify-center items-center py-12 text-gray-400">
+            Loading week...
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loadingWeek && !error && !data && (
+          <div className="text-center py-12 text-gray-400">
+            No data available for this week.
+          </div>
+        )}
+
+        {/* Week Content */}
+        {!loadingWeek && !error && data && (
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
+              <h2 className="text-2xl sm:text-3xl font-light text-white">
+                Week <span className="font-medium text-red-400">{data.week_number}</span>
+              </h2>
+              <div className="w-12 h-px bg-red-500/30 mx-auto"></div>
+            </div>
+
+            <div className="space-y-6">
+              {data.days.map((day) => (
+                <Card key={day.id} className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl overflow-hidden">
+                  <CardHeader className="border-b border-gray-800/50 pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-12 h-12 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-lg font-semibold">
+                          {dayLabel(day.day_of_week).charAt(0)}
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl font-medium text-white">
+                            {dayLabel(day.day_of_week)}
+                          </CardTitle>
+                          {day.daily_note && (
+                            <p className="text-sm text-gray-400 mt-1">
+                              {day.daily_note}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {day.is_completed && (
+                        <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-500/20 border border-red-500/30 text-red-400">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                          Completed
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      {day.exercises.map((exercise, index) => (
+                        <div key={exercise.id} className="bg-gray-800/20 rounded-xl p-5 border border-gray-700/30">
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="flex items-center justify-center w-8 h-8 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm font-semibold">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg font-medium text-white">{exercise.name}</h4>
+                              {exercise.note && (
+                                <p className="text-sm text-gray-400 mt-1 bg-gray-800/30 px-3 py-2 rounded-lg border border-gray-700/50">
+                                  {exercise.note}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            {exercise.sets.map((set) => (
+                              <div key={set.id} className="flex items-center justify-between p-3 bg-gray-950/30 rounded-lg border border-gray-700/20">
+                                <span className="font-medium text-white">Set {set.set_number}</span>
+                                <div className="text-gray-300">
+                                  {set.log ? (
+                                    <div className="flex items-center gap-2">
+                                      <span>
+                                        {set.log.reps} reps
+                                        {typeof set.log.weight === "number" ? ` @ ${set.log.weight}lbs` : ""}
+                                        {typeof set.log.rpe === "number" ? ` (RPE ${set.log.rpe})` : ""}
+                                      </span>
+                                      {set.log.completed && (
+                                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500">No data</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

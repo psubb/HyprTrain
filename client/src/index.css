@@ -64,5 +64,42 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Improve mobile performance and scrolling */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  
+  /* Improve touch targets */
+  button,
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
+  
+  /* Smooth scrolling for better mobile experience */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Hide scrollbars on mobile when not needed */
+  @media (max-width: 768px) {
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
   }
 }

@@ -2,6 +2,17 @@
 
 This API powers the backend for the HyprTrain workout tracking app. All routes require authentication unless explicitly stated otherwise. JWTs must be passed via the `Authorization` header.
 
+## Day of Week Convention
+
+Throughout this API, days of the week are represented as integers where:
+- `0` = Monday
+- `1` = Tuesday  
+- `2` = Wednesday
+- `3` = Thursday
+- `4` = Friday
+- `5` = Saturday
+- `6` = Sunday
+
 ---
 
 ## Auth Routes
@@ -168,7 +179,7 @@ Authorization: Bearer <JWT_TOKEN>
 {
   "id": "uuid",
   "program_id": "uuid",
-  "day_of_week": 1,
+  "day_of_week": 0,
   "week_number": 2,
   "is_completed": false,
   "is_active": true
@@ -202,7 +213,7 @@ Authorization: Bearer <JWT_TOKEN>
 {
   "id": "uuid",
   "week_number": 2,
-  "day_of_week": 1,
+  "day_of_week": 0,
   "daily_note": "optional note",
   "exercises": [
     {
@@ -258,7 +269,7 @@ Retrieves the full overview of a selected week in a program for the authenticate
   "days": [
     {
       "id": "uuid",
-      "day_of_week": 1,
+      "day_of_week": 0,
       "is_completed": true,
       "daily_note": "Felt strong",
       "exercises": [
@@ -338,7 +349,7 @@ Creates recurring workout days for a program.
 
 ```json
 {
-  "daysOfWeek": [1, 3, 5],
+  "daysOfWeek": [0, 2, 4],
   "durationWeeks": 8
 }
 ```
@@ -412,7 +423,7 @@ Marks a specific workout day as completed and deactivates it. Automatically acti
 {
   "id": "uuid",
   "program_id": "uuid",
-  "day_of_week": 1,
+  "day_of_week": 0,
   "week_number": 2,
   "is_completed": true,
   "is_active": false
@@ -440,7 +451,7 @@ Adds exercises to a workout day and auto-generates two default sets per exercise
 
 ```json
 {
-  "dayOfWeek": 1,
+  "dayOfWeek": 0,
   "exercises": [
     {
       "exerciseId": "uuid-ex-1",

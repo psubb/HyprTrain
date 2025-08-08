@@ -2,8 +2,23 @@ import { useEffect, useState } from "react";
 import api from "@/api/http";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Program = {
   id: string;
@@ -50,6 +65,7 @@ type DayLog = {
   week_number: number;
   day_of_week: number;
   daily_note?: string | null;
+  daily_note_id?: string | null; // Add daily note ID for updates
   exercises: DayExercise[];
 };
 
@@ -68,6 +84,14 @@ export default function ActiveDayPage() {
   const [editingExerciseNote, setEditingExerciseNote] = useState<string | null>(null);
   const [newExerciseNote, setNewExerciseNote] = useState("");
   const [savingWorkout, setSavingWorkout] = useState(false);
+  
+  // Dialog states
+  const [showAddSetDialog, setShowAddSetDialog] = useState(false);
+  const [showRemoveSetDialog, setShowRemoveSetDialog] = useState(false);
+  const [pendingSetAction, setPendingSetAction] = useState<{
+    workoutExerciseId: string;
+    action: 'add' | 'remove';
+  } | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -111,66 +135,162 @@ export default function ActiveDayPage() {
     loadData();
   }, []);
 
+  
   const dayLabel = (n: number) => {
     const map = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const idx = Math.max(1, Math.min(7, n)) - 1;
+    const idx = Math.max(0, Math.min(6, n));
     return map[idx];
   };
 
   const logSet = async (setId: string, reps: number, weight: number | null, rpe: number | null) => {
     try {
-      await api.post(`/exercises-sets/${setId}/log`, {
+      await api.post(`/exercise-sets/${setId}/log`, {
         reps,
         weight,
         rpe
       });
-      // Reload data to show updated log
-      await loadData();
+      
+      // Update local state instead of reloading everything
+      if (dayLog) {
+        const updatedDayLog = {
+          ...dayLog,
+          exercises: dayLog.exercises.map(exercise => ({
+            ...exercise,
+            sets: exercise.sets.map(set => 
+              set.id === setId 
+                ? {
+                    ...set,
+                    log: {
+                      reps,
+                      weight,
+                      rpe,
+                      completed: true
+                    }
+                  }
+                : set
+            )
+          }))
+        };
+        setDayLog(updatedDayLog);
+      }
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to log set");
     }
   };
 
-  const addSet = async (workoutExerciseId: string) => {
+  const addSet = async (workoutExerciseId: string, propagate: boolean = false) => {
     try {
-      await api.post(`/workout-exercises/${workoutExerciseId}/sets`, {
-        propagate: false
+      const response = await api.post(`/workout-exercises/${workoutExerciseId}/sets`, {
+        propagate
       });
-      await loadData();
+      
+      // Update local state with the new set (response.data is an array, we need the first one)
+      if (dayLog && response.data && Array.isArray(response.data) && response.data.length > 0) {
+        const newSet = response.data[0]; // Take the first set (current workout)
+        const updatedDayLog = {
+          ...dayLog,
+          exercises: dayLog.exercises.map(exercise => 
+            exercise.id === workoutExerciseId
+              ? {
+                  ...exercise,
+                  sets: [...exercise.sets, {
+                    id: newSet.id,
+                    set_number: newSet.set_number,
+                    log: null,
+                    previous_log: null
+                  }]
+                }
+              : exercise
+          )
+        };
+        setDayLog(updatedDayLog);
+      }
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to add set");
     }
   };
 
-  const removeLastSet = async (workoutExerciseId: string) => {
+  const removeLastSet = async (workoutExerciseId: string, propagate: boolean = false) => {
     try {
-      await api.delete(`/workout-exercises/${workoutExerciseId}/sets/last`, {
-        data: { propagate: false }
-      });
-      await loadData();
+      const config = {
+        method: 'delete',
+        url: `/workout-exercises/${workoutExerciseId}/sets`,
+        data: { propagate }
+      };
+      await api.request(config);
+      
+      // Update local state by removing the last set
+      if (dayLog) {
+        const updatedDayLog = {
+          ...dayLog,
+          exercises: dayLog.exercises.map(exercise => 
+            exercise.id === workoutExerciseId
+              ? {
+                  ...exercise,
+                  sets: exercise.sets.slice(0, -1) // Remove the last set
+                }
+              : exercise
+          )
+        };
+        setDayLog(updatedDayLog);
+      }
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to remove set");
     }
+  };
+
+  const handleAddSetClick = (workoutExerciseId: string) => {
+    setPendingSetAction({ workoutExerciseId, action: 'add' });
+    setShowAddSetDialog(true);
+  };
+
+  const handleRemoveSetClick = (workoutExerciseId: string) => {
+    setPendingSetAction({ workoutExerciseId, action: 'remove' });
+    setShowRemoveSetDialog(true);
+  };
+
+  const confirmAddSet = async (propagate: boolean) => {
+    if (pendingSetAction?.action === 'add') {
+      await addSet(pendingSetAction.workoutExerciseId, propagate);
+    }
+    setShowAddSetDialog(false);
+    setPendingSetAction(null);
+  };
+
+  const confirmRemoveSet = async (propagate: boolean) => {
+    if (pendingSetAction?.action === 'remove') {
+      await removeLastSet(pendingSetAction.workoutExerciseId, propagate);
+    }
+    setShowRemoveSetDialog(false);
+    setPendingSetAction(null);
   };
 
   const saveDailyNote = async () => {
     if (!dayLog) return;
     
     try {
-      if (dayLog.daily_note) {
-        // Update existing note - need to find the note ID first
-        // For now, we'll create a new one if it doesn't exist
-        await api.post(`/workout-days/${dayLog.id}/daily-note`, {
+      let dailyNoteId = dayLog.daily_note_id;
+      
+      if (dayLog.daily_note_id) {
+        // Update existing note using PATCH
+        await api.patch(`/daily-notes/${dayLog.daily_note_id}`, {
           note: newDailyNote
         });
       } else {
-        // Create new note
-        await api.post(`/workout-days/${dayLog.id}/daily-note`, {
+        // Create new note using POST
+        const response = await api.post(`/workout-days/${dayLog.id}/daily-note`, {
           note: newDailyNote
         });
+        dailyNoteId = response.data?.id;
       }
+      
+      // Update local state instead of reloading
+      setDayLog({
+        ...dayLog,
+        daily_note: newDailyNote,
+        daily_note_id: dailyNoteId
+      });
       setEditingNote(null);
-      await loadData();
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to save daily note");
     }
@@ -181,9 +301,25 @@ export default function ActiveDayPage() {
       await api.post(`/workout-exercises/${workoutExerciseId}/note`, {
         note: newExerciseNote
       });
+      
+      // Update local state instead of reloading
+      if (dayLog) {
+        const updatedDayLog = {
+          ...dayLog,
+          exercises: dayLog.exercises.map(exercise => 
+            exercise.id === workoutExerciseId
+              ? {
+                  ...exercise,
+                  note: newExerciseNote
+                }
+              : exercise
+          )
+        };
+        setDayLog(updatedDayLog);
+      }
+      
       setEditingExerciseNote(null);
       setNewExerciseNote("");
-      await loadData();
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to save exercise note");
     }
@@ -240,89 +376,192 @@ export default function ActiveDayPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Today's Workout</h1>
-        <p className="text-zinc-400">
-          {program.name} • Week {dayLog.week_number} • {dayLabel(dayLog.day_of_week)}
-        </p>
-      </div>
-
-      {/* Daily Note Section */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-medium">Daily Note</h3>
-          {!editingNote && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditingNote("daily")}
-            >
-              {dayLog.daily_note ? "Edit" : "Add Note"}
-            </Button>
-          )}
-        </div>
-        
-        {editingNote === "daily" ? (
-          <div className="space-y-2">
-            <Textarea
-              value={newDailyNote}
-              onChange={(e) => setNewDailyNote(e.target.value)}
-              placeholder="How are you feeling today? Any notes about the workout?"
-              className="bg-zinc-800 border-zinc-700"
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={saveDailyNote}>
-                Save
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setEditingNote(null);
-                  setNewDailyNote(dayLog.daily_note || "");
-                }}
-              >
-                Cancel
-              </Button>
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black">
+      <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8 sm:space-y-12">
+        {/* Header Section */}
+        <div className="text-center space-y-6 py-8 sm:py-12">
+          <div className="inline-flex items-center px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-sm font-medium backdrop-blur-sm">
+            <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
+            ACTIVE SESSION
+          </div>
+          <div className="space-y-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light text-white tracking-tight">
+              Today's <span className="font-semibold text-red-400">Training</span>
+            </h1>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-gray-400">
+              <div className="flex items-center gap-3">
+                <span className="text-white font-medium text-lg">{program.name}</span>
+                <div className="w-1 h-1 bg-gray-600 rounded-full hidden sm:block"></div>
+                <span className="text-sm">Week {dayLog.week_number}</span>
+                <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                <span className="text-sm">{dayLabel(dayLog.day_of_week)}</span>
+              </div>
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-zinc-300">
-            {dayLog.daily_note || "No daily note added yet."}
-          </p>
-        )}
+        </div>
+
+        {/* Daily Note Card */}
+        <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl">
+          <CardHeader className="border-b border-gray-800/50 pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-medium flex items-center gap-3 text-white">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                Daily Note
+              </CardTitle>
+              {!editingNote && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 text-sm font-medium transition-colors duration-200"
+                  onClick={() => setEditingNote("daily")}
+                >
+                  {dayLog.daily_note ? "Edit" : "Add Note"}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {editingNote === "daily" ? (
+              <div className="space-y-4">
+                <Textarea
+                  value={newDailyNote}
+                  onChange={(e) => setNewDailyNote(e.target.value)}
+                  placeholder="How are you feeling today? Any notes about the workout?"
+                  className="min-h-[80px] resize-none bg-gray-950/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 rounded-lg"
+                />
+                <div className="flex gap-3">
+                  <Button 
+                    size="sm" 
+                    onClick={saveDailyNote} 
+                    className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 transition-colors duration-200"
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium"
+                    onClick={() => {
+                      setEditingNote(null);
+                      setNewDailyNote(dayLog.daily_note || "");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-300 leading-relaxed">
+                {dayLog.daily_note || "No daily note added yet."}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Exercises Grid */}
+        <div className="space-y-8">
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl sm:text-3xl font-light text-white">
+              Exercise <span className="font-medium text-red-400">Log</span>
+            </h2>
+            <div className="w-12 h-px bg-red-500/30 mx-auto"></div>
+          </div>
+          {dayLog.exercises.map((exercise, index) => (
+            <ExerciseCard
+              key={exercise.id}
+              exercise={exercise}
+              exerciseNumber={index + 1}
+              onLogSet={logSet}
+              onAddSet={handleAddSetClick}
+              onRemoveSet={handleRemoveSetClick}
+              onSaveNote={saveExerciseNote}
+              editingExerciseNote={editingExerciseNote}
+              setEditingExerciseNote={setEditingExerciseNote}
+              newExerciseNote={newExerciseNote}
+              setNewExerciseNote={setNewExerciseNote}
+            />
+          ))}
+        </div>
+
+        {/* Complete Workout Section */}
+        <div className="text-center py-12">
+          <div className="max-w-sm mx-auto space-y-6">
+            <div className="text-gray-400 font-medium">
+              Ready to finish your workout?
+            </div>
+            <Button
+              onClick={completeWorkout}
+              disabled={savingWorkout}
+              size="lg"
+              className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg font-medium tracking-wide transition-all duration-200 w-full disabled:opacity-50"
+            >
+              {savingWorkout ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Completing...
+                </>
+              ) : (
+                "Complete Workout"
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Exercises */}
-      <div className="space-y-4">
-        {dayLog.exercises.map((exercise) => (
-          <ExerciseCard
-            key={exercise.id}
-            exercise={exercise}
-            onLogSet={logSet}
-            onAddSet={addSet}
-            onRemoveSet={removeLastSet}
-            onSaveNote={saveExerciseNote}
-            editingExerciseNote={editingExerciseNote}
-            setEditingExerciseNote={setEditingExerciseNote}
-            newExerciseNote={newExerciseNote}
-            setNewExerciseNote={setNewExerciseNote}
-          />
-        ))}
-      </div>
+      {/* Add Set Dialog */}
+      <Dialog open={showAddSetDialog} onOpenChange={setShowAddSetDialog}>
+        <DialogContent className="mx-4 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Add Set</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
+              Would you like to add this set to just this workout, or propagate it to all future workouts for this exercise on the same day of the week?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => confirmAddSet(false)}
+              className="w-full sm:w-auto"
+            >
+              Just This Workout
+            </Button>
+            <Button
+              onClick={() => confirmAddSet(true)}
+              className="w-full sm:w-auto"
+            >
+              All Future Workouts
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Complete Workout Button */}
-      <div className="flex justify-center pt-6">
-        <Button
-          onClick={completeWorkout}
-          disabled={savingWorkout}
-          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
-        >
-          {savingWorkout ? "Completing..." : "Complete Workout"}
-        </Button>
-      </div>
+      {/* Remove Set Dialog */}
+      <Dialog open={showRemoveSetDialog} onOpenChange={setShowRemoveSetDialog}>
+        <DialogContent className="mx-4 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Remove Set</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
+              Would you like to remove the last set from just this workout, or from all future workouts for this exercise on the same day of the week?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => confirmRemoveSet(false)}
+              className="w-full sm:w-auto"
+            >
+              Just This Workout
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => confirmRemoveSet(true)}
+              className="w-full sm:w-auto"
+            >
+              All Future Workouts
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -330,6 +569,7 @@ export default function ActiveDayPage() {
 // Exercise Card Component
 type ExerciseCardProps = {
   exercise: DayExercise;
+  exerciseNumber: number;
   onLogSet: (setId: string, reps: number, weight: number | null, rpe: number | null) => void;
   onAddSet: (workoutExerciseId: string) => void;
   onRemoveSet: (workoutExerciseId: string) => void;
@@ -342,6 +582,7 @@ type ExerciseCardProps = {
 
 function ExerciseCard({
   exercise,
+  exerciseNumber,
   onLogSet,
   onAddSet,
   onRemoveSet,
@@ -352,109 +593,180 @@ function ExerciseCard({
   setNewExerciseNote
 }: ExerciseCardProps) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
-      {/* Exercise Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-medium text-lg">{exercise.name}</h3>
-          {exercise.note && !editingExerciseNote && (
-            <p className="text-xs text-zinc-400 mt-1">Note: {exercise.note}</p>
-          )}
-        </div>
-        <div className="flex gap-2">
+    <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl overflow-hidden">
+      <CardHeader className="border-b border-gray-800/50 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-lg font-semibold">
+              {exerciseNumber}
+            </div>
+            <div className="flex-1">
+              <CardTitle className="text-xl font-medium text-white">
+                {exercise.name}
+              </CardTitle>
+              {exercise.note && editingExerciseNote !== exercise.id && (
+                <p className="text-sm text-gray-400 mt-2 bg-gray-800/30 px-3 py-2 rounded-lg border border-gray-700/50">
+                  {exercise.note}
+                </p>
+              )}
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="sm"
+            className="text-gray-400 hover:text-white hover:bg-gray-800/50 text-sm font-medium transition-colors duration-200"
             onClick={() => {
               setEditingExerciseNote(exercise.id);
               setNewExerciseNote(exercise.note || "");
             }}
           >
-            {exercise.note ? "Edit Note" : "Add Note"}
+            {exercise.note ? "Edit" : "Add Note"}
           </Button>
         </div>
-      </div>
 
-      {/* Exercise Note Editing */}
-      {editingExerciseNote === exercise.id && (
-        <div className="space-y-2">
-          <Textarea
-            value={newExerciseNote}
-            onChange={(e) => setNewExerciseNote(e.target.value)}
-            placeholder="Exercise-specific notes (form cues, adjustments, etc.)"
-            className="bg-zinc-800 border-zinc-700"
-          />
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => onSaveNote(exercise.id)}>
-              Save Note
-            </Button>
+        {/* Exercise Note Editing */}
+        {editingExerciseNote === exercise.id && (
+          <div className="space-y-4 pt-4 border-t border-gray-800/50">
+            <Textarea
+              value={newExerciseNote}
+              onChange={(e) => setNewExerciseNote(e.target.value)}
+              placeholder="Exercise-specific notes (form cues, adjustments, etc.)"
+              className="min-h-[60px] resize-none bg-gray-950/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 rounded-lg"
+            />
+            <div className="flex gap-3">
+              <Button 
+                size="sm" 
+                onClick={() => onSaveNote(exercise.id)} 
+                className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 transition-colors duration-200"
+              >
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium"
+                onClick={() => {
+                  setEditingExerciseNote(null);
+                  setNewExerciseNote("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardHeader>
+
+      <CardContent className="p-6">
+        {/* Sets Grid */}
+        <div className="space-y-6">
+          <div className="space-y-4">
+            {exercise.sets.map((set, index) => {
+              // Check if previous sets are completed to determine if this set can be logged
+              const previousSetsCompleted = exercise.sets
+                .slice(0, index)
+                .every(prevSet => prevSet.log?.completed === true);
+              
+              const isBlocked = !(index === 0 || previousSetsCompleted) && !set.log?.completed;
+              
+              return (
+                <SetRow
+                  key={set.id}
+                  set={set}
+                  setNumber={index + 1}
+                  onLogSet={onLogSet}
+                  isBlocked={isBlocked}
+                />
+              );
+            })}
+          </div>
+
+          {/* Add/Remove Set Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-800/50">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => {
-                setEditingExerciseNote(null);
-                setNewExerciseNote("");
-              }}
+              onClick={() => onAddSet(exercise.id)}
+              className="flex-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 font-medium py-3 transition-all duration-200"
             >
-              Cancel
+              + Add Set
             </Button>
+            {exercise.sets.length > 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRemoveSet(exercise.id)}
+                className="flex-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 font-medium py-3 transition-all duration-200"
+              >
+                Remove Set
+              </Button>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Sets */}
-      <div className="space-y-2">
-        {exercise.sets.map((set) => (
-          <SetRow
-            key={set.id}
-            set={set}
-            onLogSet={onLogSet}
-          />
-        ))}
-      </div>
-
-      {/* Add/Remove Set Buttons */}
-      <div className="flex gap-2 pt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onAddSet(exercise.id)}
-        >
-          Add Set
-        </Button>
-        {exercise.sets.length > 1 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onRemoveSet(exercise.id)}
-          >
-            Remove Last Set
-          </Button>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
 // Set Row Component
 type SetRowProps = {
   set: DaySet;
+  setNumber: number;
   onLogSet: (setId: string, reps: number, weight: number | null, rpe: number | null) => void;
+  isBlocked: boolean; // Whether this set is blocked by incomplete previous sets
 };
 
-function SetRow({ set, onLogSet }: SetRowProps) {
+function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
+  // Only pre-select if there's already a logged value, otherwise start empty
   const [reps, setReps] = useState(set.log?.reps?.toString() || "");
   const [weight, setWeight] = useState(set.log?.weight?.toString() || "");
   const [rpe, setRpe] = useState(set.log?.rpe?.toString() || "");
   const [isLogging, setIsLogging] = useState(false);
+
+  // Get previous week's values for highlighting/positioning
+  const previousReps = set.previous_log?.reps?.toString();
+  const previousWeight = set.previous_log?.weight?.toString();
+  const previousRpe = set.previous_log?.rpe?.toString();
+
+  // Generate weight options in 2.5lb increments
+  const generateWeightOptions = () => {
+    const options = [];
+    for (let i = 0; i <= 500; i += 2.5) {
+      options.push(i);
+    }
+    return options;
+  };
+
+  // Generate rep options (1-50)
+  const generateRepOptions = () => {
+    const options = [];
+    for (let i = 1; i <= 50; i++) {
+      options.push(i);
+    }
+    return options;
+  };
+
+  // Generate RPE options (1-10 in 0.5 increments)
+  const generateRPEOptions = () => {
+    const options = [];
+    for (let i = 1; i <= 10; i += 0.5) {
+      options.push(i);
+    }
+    return options;
+  };
 
   const handleLogSet = async () => {
     const repsNum = parseInt(reps);
     const weightNum = weight ? parseFloat(weight) : null;
     const rpeNum = rpe ? parseFloat(rpe) : null;
 
+    // Validation: Both reps and weight are required
     if (isNaN(repsNum) || repsNum <= 0) {
       return; // Invalid reps
+    }
+
+    if (weightNum === null || isNaN(weightNum) || weightNum < 0) {
+      return; // Invalid weight - weight is now required
     }
 
     if (rpeNum !== null && (rpeNum < 0 || rpeNum > 10)) {
@@ -470,84 +782,187 @@ function SetRow({ set, onLogSet }: SetRowProps) {
   };
 
   return (
-    <div className="border border-zinc-800 rounded p-3 space-y-3">
-      {/* Set Number and Previous Log */}
-      <div className="flex justify-between items-center">
-        <span className="font-medium">Set {set.set_number}</span>
+    <div className={`bg-gray-800/20 rounded-xl p-5 border transition-all duration-200 ${
+      isBlocked 
+        ? 'border-gray-700/50 opacity-60' 
+        : 'border-gray-700/30 hover:border-gray-600/50'
+    }`}>
+      {/* Set Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-semibold transition-all duration-200 ${
+            isBlocked 
+              ? 'bg-gray-600/30 border border-gray-600/50 text-gray-400' 
+              : 'bg-red-500/20 border border-red-500/30 text-red-400'
+          }`}>
+            {setNumber}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`font-medium ${isBlocked ? 'text-gray-400' : 'text-white'}`}>
+              Set {setNumber}
+            </span>
+            {isBlocked && (
+              <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-1 rounded-full">
+                Complete previous sets first
+              </span>
+            )}
+          </div>
+        </div>
         {set.previous_log && (
-          <span className="text-xs text-zinc-500">
+          <div className="text-xs text-gray-400 bg-gray-800/30 border border-gray-700/50 px-3 py-2 rounded-lg font-medium">
             Previous: {set.previous_log.reps} reps
             {set.previous_log.weight ? ` @ ${set.previous_log.weight}lbs` : ""}
             {set.previous_log.rpe ? ` (RPE ${set.previous_log.rpe})` : ""}
-          </span>
+          </div>
         )}
       </div>
 
       {/* Current Log Display or Input Form */}
       {set.log?.completed ? (
-        <div className="flex items-center justify-between">
-          <span className="text-green-400">
-            ✓ {set.log.reps} reps
-            {set.log.weight ? ` @ ${set.log.weight}lbs` : ""}
-            {set.log.rpe ? ` (RPE ${set.log.rpe})` : ""}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setReps(set.log?.reps?.toString() || "");
-              setWeight(set.log?.weight?.toString() || "");
-              setRpe(set.log?.rpe?.toString() || "");
-            }}
-          >
-            Edit
-          </Button>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span className="font-medium text-white">
+                {set.log.reps} reps
+                {set.log.weight ? ` @ ${set.log.weight}lbs` : ""}
+                {set.log.rpe ? ` (RPE ${set.log.rpe})` : ""}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-400 hover:text-white hover:bg-red-500/20 text-sm font-medium transition-colors duration-200"
+              onClick={() => {
+                setReps(set.log?.reps?.toString() || "");
+                setWeight(set.log?.weight?.toString() || "");
+                setRpe(set.log?.rpe?.toString() || "");
+              }}
+            >
+              Edit
+            </Button>
+          </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1">Reps</label>
-              <Input
-                type="number"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                placeholder="0"
-                className="bg-zinc-800 border-zinc-700"
-              />
+        <div className="space-y-5">
+          {isBlocked && (
+            <div className="text-center py-3">
+              <p className="text-gray-400 text-sm">
+                🔒 Complete Set {setNumber - 1} before logging this set
+              </p>
             </div>
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1">Weight (lbs)</label>
-              <Input
-                type="number"
-                step="0.5"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder="0"
-                className="bg-zinc-800 border-zinc-700"
-              />
+          )}
+          <div className={`grid grid-cols-3 gap-4 ${isBlocked ? 'pointer-events-none opacity-50' : ''}`}>
+            {/* Reps Dropdown */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Reps
+              </label>
+              <Select value={reps} onValueChange={setReps} disabled={isBlocked}>
+                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 ${
+                  isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
+                }`}>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  {generateRepOptions().map((repOption) => {
+                    const isPrevious = previousReps === repOption.toString();
+                    return (
+                      <SelectItem 
+                        key={repOption} 
+                        value={repOption.toString()} 
+                        className={`text-white hover:bg-red-500/20 focus:bg-red-500/20 ${
+                          isPrevious ? 'bg-red-500/10 border-l-2 border-red-500 font-medium' : ''
+                        }`}
+                      >
+                        {repOption} {isPrevious ? '← Previous' : ''}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1">RPE (1-10)</label>
-              <Input
-                type="number"
-                step="0.5"
-                min="1"
-                max="10"
-                value={rpe}
-                onChange={(e) => setRpe(e.target.value)}
-                placeholder="7"
-                className="bg-zinc-800 border-zinc-700"
-              />
+
+            {/* Weight Dropdown */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+                Weight (lbs)
+              </label>
+              <Select value={weight} onValueChange={setWeight} disabled={isBlocked}>
+                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 ${
+                  isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
+                }`}>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[200px] bg-gray-900 border-gray-700">
+                  {generateWeightOptions().map((weightOption) => {
+                    const isPrevious = previousWeight === weightOption.toString();
+                    return (
+                      <SelectItem 
+                        key={weightOption} 
+                        value={weightOption.toString()} 
+                        className={`text-white hover:bg-red-500/20 focus:bg-red-500/20 ${
+                          isPrevious ? 'bg-red-500/10 border-l-2 border-red-500 font-medium' : ''
+                        }`}
+                      >
+                        {weightOption} lbs {isPrevious ? '← Previous' : ''}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* RPE Dropdown */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+                RPE (Optional)
+              </label>
+              <Select value={rpe} onValueChange={setRpe} disabled={isBlocked}>
+                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 ${
+                  isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
+                }`}>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  {generateRPEOptions().map((rpeOption) => {
+                    const isPrevious = previousRpe === rpeOption.toString();
+                    return (
+                      <SelectItem 
+                        key={rpeOption} 
+                        value={rpeOption.toString()} 
+                        className={`text-white hover:bg-red-500/20 focus:bg-red-500/20 ${
+                          isPrevious ? 'bg-red-500/10 border-l-2 border-red-500 font-medium' : ''
+                        }`}
+                      >
+                        RPE {rpeOption} {isPrevious ? '← Previous' : ''}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
           <Button
             onClick={handleLogSet}
-            disabled={isLogging || !reps}
-            size="sm"
-            className="w-full"
+            disabled={isLogging || !reps || !weight || isBlocked}
+            className={`w-full font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+              isBlocked 
+                ? 'bg-gray-600 border-gray-500 text-gray-300' 
+                : 'bg-red-500 hover:bg-red-600 text-white'
+            }`}
           >
-            {isLogging ? "Logging..." : "Log Set"}
+            {isLogging ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-3"></div>
+                Logging Set...
+              </>
+            ) : isBlocked ? (
+              "🔒 Complete Previous Sets First"
+            ) : (
+              "Log This Set"
+            )}
           </Button>
         </div>
       )}
