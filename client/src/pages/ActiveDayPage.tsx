@@ -333,9 +333,11 @@ export default function ActiveDayPage() {
     setSavingWorkout(true);
     try {
       await api.patch(`/workout-days/${activeDayMeta.id}/complete`);
-      navigate("/programs"); // Redirect to programs page after completion
+      // Reload data to get the next active day instead of navigating away
+      await loadData();
     } catch (e: any) {
       setError(e?.response?.data?.message || "Failed to complete workout");
+    } finally {
       setSavingWorkout(false);
     }
   };
