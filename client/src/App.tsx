@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import LoginPage from "@/pages/LoginPage";
+import RegisterPage from "@/pages/RegisterPage";
 import ActiveDayPage from "@/pages/ActiveDayPage";
 import ProgramBuilderPage from "@/pages/ProgramBuilderPage";
 import CustomExercisesPage from "@/pages/CustomExercisesPage";
@@ -13,6 +14,7 @@ export default function App() {
     <Routes>
       {/* Public */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       {/* Authenticated */}
       <Route element={
