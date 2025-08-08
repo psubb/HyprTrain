@@ -55,6 +55,7 @@ type DayExercise = {
   id: string;            // workout_exercise_id
   exercise_id: string;
   name: string;
+  muscle_group_name: string;
   order_index: number;
   note?: string | null;
   sets: DaySet[];
@@ -117,6 +118,7 @@ export default function ActiveDayPage() {
 
       // 3) Full day log
       const { data: log } = await api.get<DayLog>(`/workout-days/${activeDay.id}/log`);
+      console.log('Day log data:', log); // Debug: Check if muscle_group_name is present
       setDayLog(log);
       setNewDailyNote(log.daily_note || "");
     } catch (e: any) {
@@ -379,32 +381,31 @@ export default function ActiveDayPage() {
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black">
       <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8 sm:space-y-12">
         {/* Header Section */}
-        <div className="text-center space-y-6 py-8 sm:py-12">
-          <div className="inline-flex items-center px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-sm font-medium backdrop-blur-sm">
+        <div className="text-center space-y-4 sm:space-y-6 py-6 sm:py-8 md:py-12 px-2">
+          <div className="inline-flex items-center px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs sm:text-sm font-medium backdrop-blur-sm">
             <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
             ACTIVE SESSION
           </div>
-          <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light text-white tracking-tight">
+          <div className="space-y-3 sm:space-y-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white tracking-tight leading-tight">
               Today's <span className="font-semibold text-red-400">Training</span>
             </h1>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-gray-400">
-              <div className="flex items-center gap-3">
-                <span className="text-white font-medium text-lg">{program.name}</span>
-                <div className="w-1 h-1 bg-gray-600 rounded-full hidden sm:block"></div>
-                <span className="text-sm">Week {dayLog.week_number}</span>
+            <div className="flex flex-col items-center justify-center gap-2 sm:gap-3 text-gray-400">
+              <span className="text-white font-medium text-base sm:text-lg text-center">{program.name}</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-sm">
+                <span>Week {dayLog.week_number}</span>
                 <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
-                <span className="text-sm">{dayLabel(dayLog.day_of_week)}</span>
+                <span>{dayLabel(dayLog.day_of_week)}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Daily Note Card */}
-        <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl">
+        <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl mx-2 sm:mx-0">
           <CardHeader className="border-b border-gray-800/50 pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-medium flex items-center gap-3 text-white">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-base sm:text-lg font-medium flex items-center gap-2 sm:gap-3 text-white">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 Daily Note
               </CardTitle>
@@ -412,7 +413,7 @@ export default function ActiveDayPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 text-sm font-medium transition-colors duration-200"
+                  className="text-gray-400 hover:text-white hover:bg-gray-800/50 text-xs sm:text-sm font-medium transition-colors duration-200 px-2 sm:px-3"
                   onClick={() => setEditingNote("daily")}
                 >
                   {dayLog.daily_note ? "Edit" : "Add Note"}
@@ -420,7 +421,7 @@ export default function ActiveDayPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             {editingNote === "daily" ? (
               <div className="space-y-4">
                 <Textarea
@@ -429,18 +430,18 @@ export default function ActiveDayPage() {
                   placeholder="How are you feeling today? Any notes about the workout?"
                   className="min-h-[80px] resize-none bg-gray-950/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 rounded-lg"
                 />
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <Button 
                     size="sm" 
                     onClick={saveDailyNote} 
-                    className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 transition-colors duration-200"
+                    className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 transition-colors duration-200 w-full sm:w-auto"
                   >
                     Save
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium"
+                    className="text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium w-full sm:w-auto"
                     onClick={() => {
                       setEditingNote(null);
                       setNewDailyNote(dayLog.daily_note || "");
@@ -459,9 +460,9 @@ export default function ActiveDayPage() {
         </Card>
 
         {/* Exercises Grid */}
-        <div className="space-y-8">
-          <div className="text-center space-y-3">
-            <h2 className="text-2xl sm:text-3xl font-light text-white">
+        <div className="space-y-6 sm:space-y-8 px-2 sm:px-0">
+          <div className="text-center space-y-2 sm:space-y-3">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-light text-white">
               Exercise <span className="font-medium text-red-400">Log</span>
             </h2>
             <div className="w-12 h-px bg-red-500/30 mx-auto"></div>
@@ -484,20 +485,20 @@ export default function ActiveDayPage() {
         </div>
 
         {/* Complete Workout Section */}
-        <div className="text-center py-12">
-          <div className="max-w-sm mx-auto space-y-6">
-            <div className="text-gray-400 font-medium">
+        <div className="text-center py-8 sm:py-12 px-4">
+          <div className="max-w-sm mx-auto space-y-4 sm:space-y-6">
+            <div className="text-gray-400 font-medium text-sm sm:text-base">
               Ready to finish your workout?
             </div>
             <Button
               onClick={completeWorkout}
               disabled={savingWorkout}
               size="lg"
-              className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg font-medium tracking-wide transition-all duration-200 w-full disabled:opacity-50"
+              className="bg-red-500 hover:bg-red-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-medium tracking-wide transition-all duration-200 w-full disabled:opacity-50"
             >
               {savingWorkout ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2 sm:mr-3"></div>
                   Completing...
                 </>
               ) : (
@@ -510,24 +511,24 @@ export default function ActiveDayPage() {
 
       {/* Add Set Dialog */}
       <Dialog open={showAddSetDialog} onOpenChange={setShowAddSetDialog}>
-        <DialogContent className="mx-4 max-w-md">
+        <DialogContent className="mx-2 sm:mx-4 max-w-md w-[calc(100vw-1rem)] sm:w-full">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Add Set</DialogTitle>
-            <DialogDescription className="text-sm sm:text-base">
+            <DialogTitle className="text-base sm:text-lg md:text-xl">Add Set</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm md:text-base leading-relaxed">
               Would you like to add this set to just this workout, or propagate it to all future workouts for this exercise on the same day of the week?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2">
+          <DialogFooter className="flex-col gap-3 sm:flex-row sm:gap-2">
             <Button
               variant="outline"
               onClick={() => confirmAddSet(false)}
-              className="w-full sm:w-auto"
+              className="w-full order-2 sm:order-1 sm:w-auto text-sm"
             >
               Just This Workout
             </Button>
             <Button
               onClick={() => confirmAddSet(true)}
-              className="w-full sm:w-auto"
+              className="w-full order-1 sm:order-2 sm:w-auto text-sm"
             >
               All Future Workouts
             </Button>
@@ -537,25 +538,25 @@ export default function ActiveDayPage() {
 
       {/* Remove Set Dialog */}
       <Dialog open={showRemoveSetDialog} onOpenChange={setShowRemoveSetDialog}>
-        <DialogContent className="mx-4 max-w-md">
+        <DialogContent className="mx-2 sm:mx-4 max-w-md w-[calc(100vw-1rem)] sm:w-full">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Remove Set</DialogTitle>
-            <DialogDescription className="text-sm sm:text-base">
+            <DialogTitle className="text-base sm:text-lg md:text-xl">Remove Set</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm md:text-base leading-relaxed">
               Would you like to remove the last set from just this workout, or from all future workouts for this exercise on the same day of the week?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2">
+          <DialogFooter className="flex-col gap-3 sm:flex-row sm:gap-2">
             <Button
               variant="outline"
               onClick={() => confirmRemoveSet(false)}
-              className="w-full sm:w-auto"
+              className="w-full order-2 sm:order-1 sm:w-auto text-sm"
             >
               Just This Workout
             </Button>
             <Button
               variant="destructive"
               onClick={() => confirmRemoveSet(true)}
-              className="w-full sm:w-auto"
+              className="w-full order-1 sm:order-2 sm:w-auto text-sm"
             >
               All Future Workouts
             </Button>
@@ -582,7 +583,7 @@ type ExerciseCardProps = {
 
 function ExerciseCard({
   exercise,
-  exerciseNumber,
+  exerciseNumber: _exerciseNumber,
   onLogSet,
   onAddSet,
   onRemoveSet,
@@ -593,28 +594,26 @@ function ExerciseCard({
   setNewExerciseNote
 }: ExerciseCardProps) {
   return (
-    <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl overflow-hidden">
+    <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl overflow-hidden mx-2 sm:mx-0">
       <CardHeader className="border-b border-gray-800/50 pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-lg font-semibold">
-              {exerciseNumber}
-            </div>
-            <div className="flex-1">
-              <CardTitle className="text-xl font-medium text-white">
-                {exercise.name}
-              </CardTitle>
-              {exercise.note && editingExerciseNote !== exercise.id && (
-                <p className="text-sm text-gray-400 mt-2 bg-gray-800/30 px-3 py-2 rounded-lg border border-gray-700/50">
-                  {exercise.note}
-                </p>
-              )}
-            </div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg sm:text-xl font-medium text-white leading-tight">
+              {exercise.name}
+            </CardTitle>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+              {exercise.muscle_group_name || 'Unknown muscle group'}
+            </p>
+            {exercise.note && editingExerciseNote !== exercise.id && (
+              <p className="text-xs sm:text-sm text-gray-400 mt-2 bg-gray-800/30 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-700/50 break-words">
+                {exercise.note}
+              </p>
+            )}
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-white hover:bg-gray-800/50 text-sm font-medium transition-colors duration-200"
+            className="text-gray-400 hover:text-white hover:bg-gray-800/50 text-xs sm:text-sm font-medium transition-colors duration-200 px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0"
             onClick={() => {
               setEditingExerciseNote(exercise.id);
               setNewExerciseNote(exercise.note || "");
@@ -633,18 +632,18 @@ function ExerciseCard({
               placeholder="Exercise-specific notes (form cues, adjustments, etc.)"
               className="min-h-[60px] resize-none bg-gray-950/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 rounded-lg"
             />
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button 
                 size="sm" 
                 onClick={() => onSaveNote(exercise.id)} 
-                className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 transition-colors duration-200"
+                className="bg-red-500 hover:bg-red-600 text-white font-medium px-3 sm:px-4 py-2 transition-colors duration-200 w-full sm:w-auto text-sm"
               >
                 Save
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium"
+                className="text-gray-400 hover:text-white hover:bg-gray-800/50 font-medium w-full sm:w-auto text-sm"
                 onClick={() => {
                   setEditingExerciseNote(null);
                   setNewExerciseNote("");
@@ -657,10 +656,10 @@ function ExerciseCard({
         )}
       </CardHeader>
 
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         {/* Sets Grid */}
-        <div className="space-y-6">
-          <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             {exercise.sets.map((set, index) => {
               // Check if previous sets are completed to determine if this set can be logged
               const previousSetsCompleted = exercise.sets
@@ -682,12 +681,12 @@ function ExerciseCard({
           </div>
 
           {/* Add/Remove Set Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-800/50">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-800/50">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onAddSet(exercise.id)}
-              className="flex-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 font-medium py-3 transition-all duration-200"
+              className="flex-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 font-medium py-2.5 sm:py-3 transition-all duration-200 text-sm"
             >
               + Add Set
             </Button>
@@ -696,7 +695,7 @@ function ExerciseCard({
                 variant="outline"
                 size="sm"
                 onClick={() => onRemoveSet(exercise.id)}
-                className="flex-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 font-medium py-3 transition-all duration-200"
+                className="flex-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 font-medium py-2.5 sm:py-3 transition-all duration-200 text-sm"
               >
                 Remove Set
               </Button>
@@ -717,10 +716,22 @@ type SetRowProps = {
 };
 
 function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
-  // Only pre-select if there's already a logged value, otherwise start empty
-  const [reps, setReps] = useState(set.log?.reps?.toString() || "");
-  const [weight, setWeight] = useState(set.log?.weight?.toString() || "");
-  const [rpe, setRpe] = useState(set.log?.rpe?.toString() || "");
+  // Pre-select previous values if available, otherwise use logged values, otherwise start empty
+  const [reps, setReps] = useState(
+    set.log?.reps?.toString() || 
+    set.previous_log?.reps?.toString() || 
+    ""
+  );
+  const [weight, setWeight] = useState(
+    set.log?.weight?.toString() || 
+    set.previous_log?.weight?.toString() || 
+    ""
+  );
+  const [rpe, setRpe] = useState(
+    set.log?.rpe?.toString() || 
+    set.previous_log?.rpe?.toString() || 
+    ""
+  );
   const [isLogging, setIsLogging] = useState(false);
 
   // Get previous week's values for highlighting/positioning
@@ -782,34 +793,31 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
   };
 
   return (
-    <div className={`bg-gray-800/20 rounded-xl p-5 border transition-all duration-200 ${
+    <div className={`bg-gray-800/20 rounded-xl p-3 sm:p-5 border transition-all duration-200 ${
       isBlocked 
         ? 'border-gray-700/50 opacity-60' 
         : 'border-gray-700/30 hover:border-gray-600/50'
     }`}>
       {/* Set Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-semibold transition-all duration-200 ${
-            isBlocked 
-              ? 'bg-gray-600/30 border border-gray-600/50 text-gray-400' 
-              : 'bg-red-500/20 border border-red-500/30 text-red-400'
-          }`}>
-            {setNumber}
-          </div>
-          <div className="flex items-center gap-3">
-            <span className={`font-medium ${isBlocked ? 'text-gray-400' : 'text-white'}`}>
+      <div className="flex flex-col gap-3 mb-4 sm:mb-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className={`flex items-center justify-center w-16 h-7 sm:w-20 sm:h-8 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
+              isBlocked 
+                ? 'bg-gray-600/30 border border-gray-600/50 text-gray-400' 
+                : 'bg-red-500/20 border border-red-500/30 text-red-400'
+            }`}>
               Set {setNumber}
-            </span>
-            {isBlocked && (
-              <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-1 rounded-full">
-                Complete previous sets first
-              </span>
-            )}
+            </div>
           </div>
         </div>
+        {isBlocked && (
+          <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-1 rounded-full self-start">
+            Complete previous sets first
+          </span>
+        )}
         {set.previous_log && (
-          <div className="text-xs text-gray-400 bg-gray-800/30 border border-gray-700/50 px-3 py-2 rounded-lg font-medium">
+          <div className="text-xs text-gray-400 bg-gray-800/30 border border-gray-700/50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium break-words">
             Previous: {set.previous_log.reps} reps
             {set.previous_log.weight ? ` @ ${set.previous_log.weight}lbs` : ""}
             {set.previous_log.rpe ? ` (RPE ${set.previous_log.rpe})` : ""}
@@ -819,11 +827,11 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
 
       {/* Current Log Display or Input Form */}
       {set.log?.completed ? (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="font-medium text-white">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 sm:p-4 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+              <span className="font-medium text-white text-sm sm:text-base break-words">
                 {set.log.reps} reps
                 {set.log.weight ? ` @ ${set.log.weight}lbs` : ""}
                 {set.log.rpe ? ` (RPE ${set.log.rpe})` : ""}
@@ -832,7 +840,7 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-red-400 hover:text-white hover:bg-red-500/20 text-sm font-medium transition-colors duration-200"
+              className="text-red-400 hover:text-white hover:bg-red-500/20 text-xs sm:text-sm font-medium transition-colors duration-200 px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0"
               onClick={() => {
                 setReps(set.log?.reps?.toString() || "");
                 setWeight(set.log?.weight?.toString() || "");
@@ -844,22 +852,22 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
           </div>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           {isBlocked && (
-            <div className="text-center py-3">
-              <p className="text-gray-400 text-sm">
+            <div className="text-center py-2 sm:py-3">
+              <p className="text-gray-400 text-xs sm:text-sm">
                 🔒 Complete Set {setNumber - 1} before logging this set
               </p>
             </div>
           )}
-          <div className={`grid grid-cols-3 gap-4 ${isBlocked ? 'pointer-events-none opacity-50' : ''}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 ${isBlocked ? 'pointer-events-none opacity-50' : ''}`}>
             {/* Reps Dropdown */}
             <div className="space-y-2">
               <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
                 Reps
               </label>
               <Select value={reps} onValueChange={setReps} disabled={isBlocked}>
-                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 ${
+                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 h-10 sm:h-auto ${
                   isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
                 }`}>
                   <SelectValue placeholder="Select" />
@@ -889,7 +897,7 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
                 Weight (lbs)
               </label>
               <Select value={weight} onValueChange={setWeight} disabled={isBlocked}>
-                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 ${
+                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 h-10 sm:h-auto ${
                   isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
                 }`}>
                   <SelectValue placeholder="Select" />
@@ -919,7 +927,7 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
                 RPE (Optional)
               </label>
               <Select value={rpe} onValueChange={setRpe} disabled={isBlocked}>
-                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 ${
+                <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 h-10 sm:h-auto ${
                   isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
                 }`}>
                   <SelectValue placeholder="Select" />
@@ -947,7 +955,7 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
           <Button
             onClick={handleLogSet}
             disabled={isLogging || !reps || !weight || isBlocked}
-            className={`w-full font-medium py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`w-full font-medium py-2.5 sm:py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${
               isBlocked 
                 ? 'bg-gray-600 border-gray-500 text-gray-300' 
                 : 'bg-red-500 hover:bg-red-600 text-white'
@@ -955,13 +963,20 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
           >
             {isLogging ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-3"></div>
-                Logging Set...
+                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-2 sm:mr-3"></div>
+                <span className="hidden sm:inline">Logging Set...</span>
+                <span className="sm:hidden">Logging...</span>
               </>
             ) : isBlocked ? (
-              "🔒 Complete Previous Sets First"
+              <>
+                <span className="hidden sm:inline">🔒 Complete Previous Sets First</span>
+                <span className="sm:hidden">🔒 Complete Previous</span>
+              </>
             ) : (
-              "Log This Set"
+              <>
+                <span className="hidden sm:inline">Log This Set</span>
+                <span className="sm:hidden">Log Set</span>
+              </>
             )}
           </Button>
         </div>
