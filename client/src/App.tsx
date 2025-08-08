@@ -6,6 +6,7 @@ import ProgramBuilderPage from "@/pages/ProgramBuilderPage";
 import CustomExercisesPage from "@/pages/CustomExercisesPage";
 import ProgramsPage from "@/pages/ProgramsPage";
 import ProgramDetailPage from "@/pages/ProgramDetailPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 export default function App() {
   return (
@@ -14,7 +15,11 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
 
       {/* Authenticated */}
-      <Route element={<AppLayout />}>
+      <Route element={
+        <ProtectedRoute>
+          <AppLayout />
+        </ProtectedRoute>
+        }>
         <Route index element={<Navigate to="/workout-days/active" replace />} />
         <Route path="/workout-days/active" element={<ActiveDayPage />} />
         <Route path="/programs/new" element={<ProgramBuilderPage />} />
