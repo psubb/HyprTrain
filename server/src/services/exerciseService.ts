@@ -1,4 +1,4 @@
-import { insertCustomExercise, findExerciseByNameForUser, softDeleteExerciseById, getCustomExercisesForUser, getExercisesByMuscleGroupForUser } from "../models/exerciseModel";
+import { insertCustomExercise, findExerciseByNameForUser, softDeleteExerciseById, getCustomExercisesForUser, getExercisesByMuscleGroupForUser, getAllExercisesForUser } from "../models/exerciseModel";
 import { Exercise } from "../types/Exercise";
 
 export async function createCustomExercise(userId: string, exerciseName: string, muscleGroupId: string): Promise<Exercise>{
@@ -34,4 +34,9 @@ export async function getExercisesByMuscleGroup(userId: string, muscleGroupId: s
     const muscleGroupExercises = await getExercisesByMuscleGroupForUser(userId, muscleGroupId);
 
     return muscleGroupExercises;
+}
+
+export async function getAllExercises(userId: string): Promise<Exercise[]>{
+    const allExercises = await getAllExercisesForUser(userId);
+    return allExercises;
 }

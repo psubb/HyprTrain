@@ -426,8 +426,12 @@ export default function ActiveDayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black">
-      <div className="max-w-4xl mx-auto p-4 sm:p-8 space-y-8 sm:space-y-12">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-gray-950 to-black relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
+      
+      <div className="relative max-w-4xl mx-auto p-4 sm:p-8 space-y-8 sm:space-y-12">
         {/* Header Section */}
         <div className="text-center space-y-4 sm:space-y-6 py-6 sm:py-8 md:py-12 px-2">
           <div className="inline-flex items-center px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs sm:text-sm font-medium backdrop-blur-sm">

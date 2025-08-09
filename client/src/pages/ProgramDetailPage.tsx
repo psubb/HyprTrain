@@ -107,16 +107,24 @@ export default function ProgramDetailPage() {
   };
 
   if (!id) return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black flex items-center justify-center p-4">
-      <div className="text-red-400 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm text-sm sm:text-base text-center max-w-sm">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-gray-950 to-black relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
+      
+      <div className="relative text-red-400 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-lg backdrop-blur-sm text-sm sm:text-base text-center max-w-sm">
         No program id in URL.
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-gray-950 to-black">
-      <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-8 space-y-6 sm:space-y-8 md:space-y-12">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-gray-950 to-black relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
+      <div className="absolute bottom-0 right-0 w-full h-px bg-gradient-to-l from-transparent via-red-500/30 to-transparent"></div>
+      
+      <div className="relative max-w-4xl mx-auto p-3 sm:p-4 md:p-8 space-y-6 sm:space-y-8 md:space-y-12">
         {/* Header Section */}
         <div className="text-center space-y-4 sm:space-y-6 py-6 sm:py-8 md:py-12 px-2">
           <div className="space-y-3 sm:space-y-4">

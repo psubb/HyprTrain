@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createCustomExercise as createCustomExerciseService, deleteCustomExercise as deleteCustomExerciseService, getCustomExercises as getCustomExercisesService, getExercisesByMuscleGroup as getExercisesByMuscleGroupService } from "../services/exerciseService";
+import { createCustomExercise as createCustomExerciseService, deleteCustomExercise as deleteCustomExerciseService, getCustomExercises as getCustomExercisesService, getExercisesByMuscleGroup as getExercisesByMuscleGroupService, getAllExercises as getAllExercisesService } from "../services/exerciseService";
 
 export async function createCustomExercise(req: Request, res: Response){
     const userId = req.user?.userId;
@@ -68,5 +68,27 @@ export async function getExercisesByMuscleGroup(req: Request, res: Response){
         res.status(200).json(muscleGroupExercises);
     } catch (err: any) {
         res.status(500).json({message: err.message || "Failed to fetch exercises for muscle group"});
+    }
+}
+
+export async function getAllExercises(req: Request, res: Response){
+    const userId = req.user?.userId;
+    console.log('🔍 getAllExercises called for userId:', userId);
+
+    if (!userId){
+        console.log('❌ No userId found in request');
+        res.status(401).json({message: "Unauthorized: User not found"});
+        return;
+    }
+
+    try {
+        console.log('📞 Calling getAllExercisesService...');
+        const allExercises = await getAllExercisesService(userId);
+        console.log('✅ Exercises fetched:', allExercises.length);
+        console.log('📋 First few exercises:', allExercises.slice(0, 3));
+        res.status(200).json(allExercises);
+    } catch (err: any) {
+        console.error('❌ Error in getAllExercises:', err);
+        res.status(500).json({message: err.message || "Failed to fetch exercises"});
     }
 }

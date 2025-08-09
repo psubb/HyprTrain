@@ -29,6 +29,7 @@ export default function AppLayout() {
         <NavLink
           key={item.to}
           to={item.to}
+          end={item.to === "/programs"} // Only match exactly /programs, not /programs/*
           onClick={onItemClick}
           className={({ isActive }) =>
             `group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${

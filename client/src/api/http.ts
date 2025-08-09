@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // comes from your .env file
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api', // fallback to /api if env var not set
 });
 
 // Attach token to every request if it exists

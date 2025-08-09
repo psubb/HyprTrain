@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure dialog overlay and content are properly styled */
+[data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-radix-dialog-content] {
+  background-color: rgb(17 24 39 / 0.95) !important;
+  border: 1px solid rgb(75 85 99 / 0.5) !important;
+  color: white !important;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
