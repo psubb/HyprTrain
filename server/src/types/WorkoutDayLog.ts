@@ -3,6 +3,7 @@ export interface WorkoutDayLog {
     week_number: number;
     day_of_week: number;
     daily_note: string | null;
+    daily_note_id: string | null;
     exercises: WorkoutDayExerciseLog[];
   }
   
@@ -10,6 +11,7 @@ export interface WorkoutDayLog {
     id: string; // workout_exercise_id
     exercise_id: string;
     name: string;
+    muscle_group_name: string;
     order_index: number;
     note: string | null;
     sets: WorkoutDaySetLog[];

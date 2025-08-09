@@ -1,0 +1,7 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with red square and border -->
+  <rect width="32" height="32" rx="6" fill="rgba(239, 68, 68, 0.2)" stroke="rgba(239, 68, 68, 0.3)" stroke-width="1"/>
+  
+  <!-- HT Text -->
+  <text x="16" y="21" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold" fill="#f87171" text-anchor="middle">HT</text>
+</svg>

@@ -10,6 +10,7 @@ import dailyNoteRoutes from "./routes/dailyNoteRoutes";
 import exerciseNoteRoutes from "./routes/exerciseNoteRoutes";
 import exerciseLogRoutes from "./routes/exerciseLogRoutes";
 import exerciseSetRoutes from "./routes/exerciseSetRoutes";
+import muscleGroupRoutes from "./routes/muscleGroupRoutes";
 
 dotenv.config();
 const app: Application = express();
@@ -25,6 +26,7 @@ app.use('/api', dailyNoteRoutes);
 app.use('/api', exerciseNoteRoutes);
 app.use('/api', exerciseLogRoutes);
 app.use('/api', exerciseSetRoutes);
+app.use('/api', muscleGroupRoutes);
 
 app.get('/', (_req: Request, res: Response): void => {
     res.send('HyprTrain API is running');
