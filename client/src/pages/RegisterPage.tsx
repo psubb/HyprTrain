@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { FormEvent } from "react"; 
 import { useState } from "react";
@@ -121,20 +122,18 @@ export default function RegisterPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-300">Password</label>
-                  <Input 
+                  <PasswordInput 
                     name="password" 
                     placeholder="Create a password" 
-                    type="password" 
                     required 
                     className="h-12 bg-gray-950/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-300">Confirm Password</label>
-                  <Input 
+                  <PasswordInput 
                     name="confirmPassword" 
                     placeholder="Confirm your password" 
-                    type="password" 
                     required 
                     className="h-12 bg-gray-950/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20"
                   />
