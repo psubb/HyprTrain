@@ -82,7 +82,7 @@ export default function AppLayout() {
                 {/* Mobile Header */}
                 <div className="flex items-center gap-3 mb-8 pt-2">
                   <div className="w-8 h-8 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center">
-                    <span className="text-red-400 font-bold text-sm">H</span>
+                    <span className="text-red-400 font-bold text-xs">HT</span>
                   </div>
                   <div className="font-bold text-xl text-white">HyprTrain</div>
                 </div>
@@ -105,7 +105,7 @@ export default function AppLayout() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-red-400 font-bold text-sm">H</span>
+              <span className="text-red-400 font-bold text-xs">HT</span>
             </div>
             <div className="font-bold text-lg sm:text-xl text-white truncate">HyprTrain</div>
           </div>
@@ -157,7 +157,7 @@ export default function AppLayout() {
             <div className="mb-8">
               <div className="text-center space-y-3">
                 <div className="w-12 h-12 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center justify-center mx-auto">
-                  <span className="text-red-400 font-bold text-lg">H</span>
+                  <span className="text-red-400 font-bold text-base">HT</span>
                 </div>
                 <div className="space-y-1">
                   <div className="font-bold text-lg text-white">HyprTrain</div>
