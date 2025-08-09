@@ -1,5 +1,5 @@
 import express, { Request, Response, Application } from 'express';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from "./routes/authRoutes";
 import programRoutes from "./routes/programRoutes";
@@ -15,7 +15,23 @@ import muscleGroupRoutes from "./routes/muscleGroupRoutes";
 dotenv.config();
 const app: Application = express();
 
-app.use(cors());
+const allowed = (process.env.CORS_ORIGIN ?? '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+const corsOptions: CorsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowed.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE'],
+  allowedHeaders: ['Content-Type','Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api', programRoutes);
@@ -28,8 +44,8 @@ app.use('/api', exerciseLogRoutes);
 app.use('/api', exerciseSetRoutes);
 app.use('/api', muscleGroupRoutes);
 
-app.get('/', (_req: Request, res: Response): void => {
-    res.send('HyprTrain API is running');
+app.get('/health', (_req: Request, res: Response): void => {
+    res.sendStatus(200);
 });
 
 export default app;

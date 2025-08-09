@@ -80,11 +80,17 @@ export default function AppLayout() {
             <SheetContent side="left" className="w-80 bg-gray-900/95 backdrop-blur-xl border-gray-800/50 shadow-2xl">
               <div className="flex flex-col h-full">
                 {/* Mobile Header */}
-                <div className="flex items-center gap-3 mb-8 pt-2">
-                  <div className="w-8 h-8 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center">
-                    <span className="text-red-400 font-bold text-xs">HT</span>
+                <div 
+                  className="flex items-center gap-3 mb-8 pt-2 cursor-pointer group transition-all duration-200 hover:scale-105"
+                  onClick={() => {
+                    navigate("/");
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <div className="w-8 h-8 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center group-hover:bg-red-500/30 group-hover:shadow-lg group-hover:shadow-red-500/25 transition-all duration-200">
+                    <span className="text-red-400 font-bold text-xs group-hover:scale-110 transition-transform duration-200">HT</span>
                   </div>
-                  <div className="font-bold text-xl text-white">HyprTrain</div>
+                  <div className="font-bold text-xl text-white group-hover:text-red-400 transition-colors duration-200">HyprTrain</div>
                 </div>
                 
                 {/* Mobile Navigation */}
@@ -103,11 +109,14 @@ export default function AppLayout() {
           </Sheet>
           
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-red-400 font-bold text-xs">HT</span>
+          <div 
+            className="flex items-center gap-3 cursor-pointer group transition-all duration-200 hover:scale-105"
+            onClick={() => navigate("/")}
+          >
+            <div className="w-8 h-8 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-red-500/30 group-hover:shadow-lg group-hover:shadow-red-500/25 transition-all duration-200">
+              <span className="text-red-400 font-bold text-xs group-hover:scale-110 transition-transform duration-200">HT</span>
             </div>
-            <div className="font-bold text-lg sm:text-xl text-white truncate">HyprTrain</div>
+            <div className="font-bold text-lg sm:text-xl text-white truncate group-hover:text-red-400 transition-colors duration-200">HyprTrain</div>
           </div>
         </div>
         
