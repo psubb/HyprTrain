@@ -51,7 +51,7 @@ export default function LoginPage() {
         <div className="text-center space-y-6">
           <div className="flex items-center justify-center">
             <div className="w-16 h-16 bg-red-500/20 border border-red-500/30 rounded-2xl flex items-center justify-center">
-              <span className="text-red-400 font-bold text-2xl">H</span>
+              <span className="text-red-400 font-bold text-xl">HT</span>
             </div>
           </div>
           <div className="space-y-2">
