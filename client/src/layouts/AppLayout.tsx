@@ -13,7 +13,7 @@ export default function AppLayout() {
 
   function logout(){
     setToken(null);
-    navigate("/login");
+    navigate("/");
   }
 
   const navigationItems = [

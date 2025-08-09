@@ -31,7 +31,7 @@ export default function LoginPage() {
 
       setToken(data.accessToken); // save token in context + localStorage
       setUser(data.user);
-      navigate("/workout-days/active");
+      navigate("/dashboard");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Login failed");
     } finally {
