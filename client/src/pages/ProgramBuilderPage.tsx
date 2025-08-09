@@ -7,6 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { showToast } from "@/components/ui/toast";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 type MuscleGroup = {
   id: string;
@@ -26,12 +45,92 @@ type WorkoutDay = {
   exercises: { exerciseId: string; orderIndex: number }[];
 };
 
+// Sortable Exercise Item Component
+function SortableExerciseItem({ 
+  exercise, 
+  exerciseData, 
+  onRemove 
+}: { 
+  exercise: { exerciseId: string; orderIndex: number };
+  exerciseData: Exercise | undefined;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: exercise.exerciseId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-gray-800/30 rounded-lg p-2.5 border border-gray-700/30 group hover:border-gray-600/50 transition-all duration-200 ${
+        isDragging ? 'shadow-lg shadow-red-500/25 border-red-500/50' : ''
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-200 transition-colors flex-shrink-0"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+            <circle cx="3" cy="3" r="1"/>
+            <circle cx="9" cy="3" r="1"/>
+            <circle cx="3" cy="6" r="1"/>
+            <circle cx="9" cy="6" r="1"/>
+            <circle cx="3" cy="9" r="1"/>
+            <circle cx="9" cy="9" r="1"/>
+          </svg>
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-white leading-tight" title={exerciseData?.name || "Unknown"}>
+            {exerciseData?.name || "Unknown"}
+          </div>
+          <div className="text-xs text-gray-400 leading-tight" title={exerciseData?.muscle_group_name || ""}>
+            {exerciseData?.muscle_group_name || ""}
+          </div>
+        </div>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRemove}
+          className="text-gray-400 hover:text-red-400 p-1 h-auto opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-500/10 flex-shrink-0"
+        >
+          <span className="text-sm">×</span>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 
 export default function ProgramBuilderPage() {
   const navigate = useNavigate();
   
   // Step management
   const [currentStep, setCurrentStep] = useState<'setup' | 'calendar'>('setup');
+  
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   
   // Program setup data
   const [programName, setProgramName] = useState("");
@@ -44,9 +143,10 @@ export default function ProgramBuilderPage() {
   // Exercise selection
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [showMuscleGroupDialog, setShowMuscleGroupDialog] = useState(false);
   const [showExerciseDialog, setShowExerciseDialog] = useState(false);
   const [selectedDayForExercises, setSelectedDayForExercises] = useState<number | null>(null);
-  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string>("all");
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string>("");
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   
   // Loading states
@@ -62,13 +162,16 @@ export default function ProgramBuilderPage() {
   useEffect(() => {
     console.log('🔄 Filtering exercises. Selected muscle group:', selectedMuscleGroup);
     console.log('📝 Total exercises available:', exercises.length);
-    if (selectedMuscleGroup && selectedMuscleGroup !== "all") {
+    if (selectedMuscleGroup && selectedMuscleGroup !== "all" && selectedMuscleGroup !== "") {
       const filtered = exercises.filter(ex => ex.muscle_group_id === selectedMuscleGroup);
       console.log('🎯 Filtered exercises:', filtered.length);
       setFilteredExercises(filtered);
-    } else {
+    } else if (selectedMuscleGroup === "all") {
       console.log('📋 Showing all exercises');
       setFilteredExercises(exercises);
+    } else {
+      console.log('🚫 No muscle group selected, showing empty list');
+      setFilteredExercises([]);
     }
   }, [selectedMuscleGroup, exercises]);
 
@@ -131,10 +234,40 @@ export default function ProgramBuilderPage() {
     setSelectedDays(newSelectedDays);
   };
 
-  const openExerciseDialog = (dayIndex: number) => {
+  const openMuscleGroupDialog = (dayIndex: number) => {
     setSelectedDayForExercises(dayIndex);
-    setSelectedMuscleGroup("all");
+    setSelectedMuscleGroup("");
+    setShowMuscleGroupDialog(true);
+  };
+
+  const selectMuscleGroupAndOpenExercises = (muscleGroupId: string) => {
+    setSelectedMuscleGroup(muscleGroupId);
+    setShowMuscleGroupDialog(false);
     setShowExerciseDialog(true);
+  };
+
+  const handleDragEnd = (event: DragEndEvent, dayIndex: number) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const currentWorkoutDay = workoutDays.get(dayIndex);
+      if (!currentWorkoutDay) return;
+
+      const oldIndex = currentWorkoutDay.exercises.findIndex(ex => ex.exerciseId === active.id);
+      const newIndex = currentWorkoutDay.exercises.findIndex(ex => ex.exerciseId === over?.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedExercises = arrayMove(currentWorkoutDay.exercises, oldIndex, newIndex)
+          .map((ex, index) => ({ ...ex, orderIndex: index }));
+
+        const newWorkoutDays = new Map(workoutDays);
+        newWorkoutDays.set(dayIndex, {
+          ...currentWorkoutDay,
+          exercises: reorderedExercises
+        });
+        setWorkoutDays(newWorkoutDays);
+      }
+    }
   };
 
   const addExerciseToDay = (exerciseId: string) => {
@@ -182,8 +315,14 @@ export default function ProgramBuilderPage() {
   };
 
   const createProgram = async () => {
-    if (selectedDays.size === 0) {
-      showToast.error("Please select at least one workout day");
+    // Filter to only include days that have exercises
+    const daysWithExercises = Array.from(selectedDays).filter(dayIndex => {
+      const workoutDay = workoutDays.get(dayIndex);
+      return workoutDay && workoutDay.exercises.length > 0;
+    });
+
+    if (daysWithExercises.length === 0) {
+      showToast.error("Please add exercises to at least one workout day");
       return;
     }
 
@@ -197,16 +336,16 @@ export default function ProgramBuilderPage() {
       
       const programId = programRes.data.program.id;
 
-      // 2. Create workout days
-      const daysOfWeek = Array.from(selectedDays);
+      // 2. Create workout days only for days with exercises
       await api.post(`/programs/${programId}/workout-days`, {
-        daysOfWeek,
+        daysOfWeek: daysWithExercises,
         durationWeeks
       });
 
       // 3. Add exercises to each workout day (for week 1 only, then propagate)
-      for (const [dayIndex, workoutDay] of workoutDays) {
-        if (workoutDay.exercises.length > 0) {
+      for (const dayIndex of daysWithExercises) {
+        const workoutDay = workoutDays.get(dayIndex);
+        if (workoutDay && workoutDay.exercises.length > 0) {
           // Find the workout day ID for week 1 of this day
           const weekOverview = await api.get(`/programs/${programId}/weeks/1`);
           const dayData = weekOverview.data.days.find((d: any) => d.day_of_week === dayIndex);
@@ -220,7 +359,8 @@ export default function ProgramBuilderPage() {
         }
       }
 
-      showToast.success("Program created successfully! 🎉");
+      const dayCount = daysWithExercises.length;
+      showToast.success(`Program created successfully with ${dayCount} workout day${dayCount !== 1 ? 's' : ''}! 🎉`);
       navigate("/programs");
     } catch (e: any) {
       const errorMsg = e?.response?.data?.message || "Failed to create program";
@@ -345,7 +485,7 @@ export default function ProgramBuilderPage() {
             <span className="font-semibold text-red-400 bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">{programName}</span>
           </h1>
           <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Select your workout days and add exercises for each day. Click on any day to make it active, then add exercises by muscle group.
+            Build your workout schedule by adding the days you want to train, then add exercises for each day organized by muscle group.
           </p>
         </div>
 
@@ -366,96 +506,147 @@ export default function ProgramBuilderPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 relative">
-            <div className="grid grid-cols-1 sm:grid-cols-7 gap-3 sm:gap-4">
-              {dayLabels.map((day, index) => {
-                const isSelected = selectedDays.has(index);
-                const workoutDay = workoutDays.get(index);
-                const exerciseCount = workoutDay?.exercises.length || 0;
-                
-                return (
-                  <div key={index} className="space-y-3">
-                    <Button
-                      variant={isSelected ? "default" : "outline"}
-                      onClick={() => toggleDay(index)}
-                      className={`w-full h-24 sm:h-28 flex flex-col items-center justify-center space-y-2 transition-all duration-300 relative group ${
-                        isSelected 
-                          ? "bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-500 shadow-lg shadow-red-500/25" 
-                          : "bg-gray-800/30 hover:bg-gray-700/50 text-gray-300 hover:text-white border-gray-700 hover:border-gray-600 hover:shadow-lg"
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div>
-                      )}
-                      <div className="relative z-10 text-center">
-                        <span className="text-sm sm:text-base font-bold block">
-                          {dayShortLabels[index]}
-                        </span>
-                        <span className="text-xs opacity-80 hidden sm:block">
-                          {day}
-                        </span>
-                        {isSelected && exerciseCount > 0 && (
-                          <div className="mt-1 w-2 h-2 bg-white rounded-full mx-auto animate-pulse"></div>
-                        )}
+            {/* Selected Days Display */}
+            {selectedDays.size > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+                {Array.from(selectedDays).sort().map((dayIndex) => {
+                  const workoutDay = workoutDays.get(dayIndex);
+                  const exerciseCount = workoutDay?.exercises.length || 0;
+                  
+                  return (
+                    <div key={dayIndex} className="space-y-3">
+                      <div className={`rounded-lg p-4 relative overflow-hidden transition-all duration-200 ${
+                        exerciseCount > 0 
+                          ? "bg-gradient-to-br from-red-500 to-red-600 text-white border-red-500 shadow-lg shadow-red-500/25" 
+                          : "bg-gray-800/40 text-gray-300 border border-gray-700/50 shadow-sm"
+                      }`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                        <div className="relative z-10 flex items-center justify-between">
+                          <div>
+                            <span className="text-lg font-bold block">
+                              {dayShortLabels[dayIndex]}
+                            </span>
+                            <span className="text-sm opacity-90">
+                              {dayLabels[dayIndex]}
+                            </span>
+                            <div className="flex items-center gap-2 mt-1">
+                              {exerciseCount > 0 ? (
+                                <>
+                                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                  <span className="text-xs opacity-80">Ready</span>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                                  <span className="text-xs opacity-60">No exercises</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleDay(dayIndex)}
+                            className={`p-2 h-auto transition-colors ${
+                              exerciseCount > 0 
+                                ? "text-white/70 hover:text-white hover:bg-white/10" 
+                                : "text-gray-500 hover:text-gray-300 hover:bg-gray-700/50"
+                            }`}
+                          >
+                            <span className="text-lg">×</span>
+                          </Button>
+                        </div>
                       </div>
-                    </Button>
-                    
-                    {isSelected && (
+                      
                       <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => openExerciseDialog(index)}
+                          onClick={() => openMuscleGroupDialog(dayIndex)}
                           className="w-full text-xs bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 transition-all duration-200 h-8"
                         >
                           <span className="mr-1">+</span> Add Exercise
                         </Button>
                         
                         {exerciseCount > 0 && (
-                          <div className="text-xs text-gray-400 text-center bg-gray-800/20 rounded px-2 py-1">
-                            {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''} added
+                          <div className="text-xs text-gray-400 text-center bg-gray-800/20 rounded px-2 py-1 flex items-center justify-center gap-1">
+                            <span>{exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''} added</span>
+                            {exerciseCount > 1 && (
+                              <span className="text-xs text-gray-500">• Drag to reorder</span>
+                            )}
                           </div>
                         )}
                         
-                        <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                          {workoutDay?.exercises.map((ex) => {
-                            const exercise = exercises.find(e => e.id === ex.exerciseId);
-                            return (
-                              <div key={ex.exerciseId} className="bg-gray-800/30 rounded-lg p-2.5 border border-gray-700/30 group hover:border-gray-600/50 transition-all duration-200">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium text-white truncate">
-                                      {exercise?.name || "Unknown"}
-                                    </p>
-                                    <p className="text-xs text-gray-400 truncate">
-                                      {exercise?.muscle_group_name || ""}
-                                    </p>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeExerciseFromDay(index, ex.exerciseId)}
-                                    className="text-gray-400 hover:text-red-400 p-1 h-auto opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-500/10"
-                                  >
-                                    <span className="text-sm">×</span>
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={(event) => handleDragEnd(event, dayIndex)}
+                        >
+                          <SortableContext
+                            items={workoutDay?.exercises.map(ex => ex.exerciseId) || []}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="space-y-2">
+                              {workoutDay?.exercises.map((ex) => {
+                                const exercise = exercises.find(e => e.id === ex.exerciseId);
+                                return (
+                                  <SortableExerciseItem
+                                    key={ex.exerciseId}
+                                    exercise={ex}
+                                    exerciseData={exercise}
+                                    onRemove={() => removeExerciseFromDay(dayIndex, ex.exerciseId)}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add Day Section */}
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-white mb-2">Add Workout Days</h3>
+                <p className="text-sm text-gray-400 mb-4">Select which days of the week you want to work out</p>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 sm:gap-3">
+                {dayLabels.map((day, index) => {
+                  const isSelected = selectedDays.has(index);
+                  
+                  if (isSelected) return null; // Don't show already selected days
+                  
+                  return (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      onClick={() => toggleDay(index)}
+                      className="h-16 sm:h-20 flex flex-col items-center justify-center space-y-1 bg-gray-800/30 hover:bg-red-500/20 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 transition-all duration-200"
+                    >
+                      <span className="text-sm font-bold">
+                        {dayShortLabels[index]}
+                      </span>
+                      <span className="text-xs opacity-80 hidden sm:block">
+                        {day}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
             
             {selectedDays.size === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 mt-8">
                 <div className="w-16 h-16 bg-gray-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">📅</span>
                 </div>
-                <p className="text-sm">Click on the days above to select your workout schedule</p>
+                <p className="text-sm mb-2">Select the days above to start building your workout schedule</p>
+                <p className="text-xs text-gray-600">Only days with exercises will be included in your program</p>
               </div>
             )}
           </CardContent>
@@ -472,7 +663,10 @@ export default function ProgramBuilderPage() {
           </Button>
           <Button
             onClick={createProgram}
-            disabled={loading || selectedDays.size === 0}
+            disabled={loading || Array.from(selectedDays).filter(dayIndex => {
+              const workoutDay = workoutDays.get(dayIndex);
+              return workoutDay && workoutDay.exercises.length > 0;
+            }).length === 0}
             className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed h-12 font-medium transition-all duration-200 shadow-lg hover:shadow-red-500/25"
           >
             {loading ? (
@@ -489,6 +683,88 @@ export default function ProgramBuilderPage() {
         </div>
       </div>
 
+      {/* Muscle Group Selection Dialog */}
+      <Dialog open={showMuscleGroupDialog} onOpenChange={setShowMuscleGroupDialog}>
+        <DialogContent className="mx-2 sm:mx-4 max-w-2xl w-[calc(100vw-1rem)] sm:w-full">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-xl sm:text-2xl font-semibold flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center justify-center">
+                <span className="text-red-400 text-lg">🎯</span>
+              </div>
+              Choose Muscle Group for {selectedDayForExercises !== null ? dayLabels[selectedDayForExercises] : ""}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-400 mt-2">
+              Select which muscle group you want to add exercises for. This will show you all available exercises for that muscle group.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {loadingExercises ? (
+              <div className="text-center py-12 text-gray-400">
+                <div className="w-12 h-12 bg-gray-800/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                  <span className="text-xl">💪</span>
+                </div>
+                Loading muscle groups...
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {/* All muscle groups option */}
+                <Button
+                  variant="outline"
+                  onClick={() => selectMuscleGroupAndOpenExercises("all")}
+                  className="justify-start h-auto p-4 bg-gray-800/30 hover:bg-red-500/10 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 transition-all duration-200"
+                >
+                  <div className="text-left flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div>
+                        <div className="font-medium text-sm">All Muscle Groups</div>
+                        <div className="text-xs text-gray-400">{exercises.length} exercises available</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-red-400 text-lg ml-2">→</div>
+                </Button>
+
+                {/* Individual muscle groups */}
+                {muscleGroups.map((mg) => {
+                  const count = exercises.filter(ex => ex.muscle_group_id === mg.id).length;
+                  return (
+                    <Button
+                      key={mg.id}
+                      variant="outline"
+                      onClick={() => selectMuscleGroupAndOpenExercises(mg.id)}
+                      className="justify-start h-auto p-4 bg-gray-800/30 hover:bg-red-500/10 text-gray-300 hover:text-white border-gray-700 hover:border-red-500/50 transition-all duration-200"
+                    >
+                      <div className="text-left flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          <div>
+                            <div className="font-medium text-sm">{mg.name}</div>
+                            <div className="text-xs text-gray-400">{count} exercise{count !== 1 ? 's' : ''} available</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-red-400 text-lg ml-2">→</div>
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="border-t border-gray-800/50 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowMuscleGroupDialog(false)}
+              className="w-full sm:w-auto bg-gray-800/30 hover:bg-gray-700/50 text-gray-300 hover:text-white border-gray-700 hover:border-gray-600 h-10"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Exercise Selection Dialog */}
       <Dialog open={showExerciseDialog} onOpenChange={setShowExerciseDialog}>
         <DialogContent className="mx-2 sm:mx-4 max-w-3xl w-[calc(100vw-1rem)] sm:w-full max-h-[85vh] overflow-hidden">
@@ -497,43 +773,14 @@ export default function ProgramBuilderPage() {
               <div className="w-10 h-10 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center justify-center">
                 <span className="text-red-400 text-lg">💪</span>
               </div>
-              Add Exercises to {selectedDayForExercises !== null ? dayLabels[selectedDayForExercises] : ""}
+              {selectedMuscleGroup === "all" ? "All Exercises" : muscleGroups.find(mg => mg.id === selectedMuscleGroup)?.name} - {selectedDayForExercises !== null ? dayLabels[selectedDayForExercises] : ""}
             </DialogTitle>
             <DialogDescription className="text-sm text-gray-400 mt-2">
-              Select exercises to add to this workout day. You can filter by muscle group to find exercises faster.
+              Select exercises to add to this workout day.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 overflow-y-auto max-h-[60vh] pr-2">
-            {/* Muscle Group Filter */}
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-300 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                Filter by Muscle Group
-              </label>
-              <Select value={selectedMuscleGroup} onValueChange={setSelectedMuscleGroup}>
-                <SelectTrigger className="bg-gray-950/50 border-gray-700 text-white hover:border-red-500/50 focus:border-red-500/50 h-12 transition-all duration-200">
-                  <SelectValue placeholder="All muscle groups" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700">
-                  <SelectItem value="all" className="text-white hover:bg-red-500/20 focus:bg-red-500/20">
-                    All muscle groups ({exercises.length} exercises)
-                  </SelectItem>
-                  {muscleGroups.map((mg) => {
-                    const count = exercises.filter(ex => ex.muscle_group_id === mg.id).length;
-                    return (
-                      <SelectItem 
-                        key={mg.id} 
-                        value={mg.id} 
-                        className="text-white hover:bg-red-500/20 focus:bg-red-500/20"
-                      >
-                        {mg.name} ({count} exercises)
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Exercise List */}
             {loadingExercises ? (
@@ -556,16 +803,17 @@ export default function ProgramBuilderPage() {
                   <span className="text-sm text-gray-400">
                     {filteredExercises.length} exercise{filteredExercises.length !== 1 ? 's' : ''} available
                   </span>
-                  {selectedMuscleGroup && selectedMuscleGroup !== "all" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedMuscleGroup("all")}
-                      className="text-xs text-gray-400 hover:text-white"
-                    >
-                      Clear filter
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowExerciseDialog(false);
+                      setShowMuscleGroupDialog(true);
+                    }}
+                    className="text-xs text-gray-400 hover:text-white"
+                  >
+                    ← Change muscle group
+                  </Button>
                 </div>
                 <div className="grid gap-3 max-h-80 overflow-y-auto pr-2">
                   {filteredExercises.map((exercise) => {
