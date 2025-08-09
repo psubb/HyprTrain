@@ -106,6 +106,8 @@ export default function ProgramDetailPage() {
     return map[idx];
   };
 
+
+
   if (!id) return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-gray-950 to-black relative overflow-hidden flex items-center justify-center p-4">
       {/* Background decoration */}
@@ -124,7 +126,7 @@ export default function ProgramDetailPage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent"></div>
       <div className="absolute bottom-0 right-0 w-full h-px bg-gradient-to-l from-transparent via-red-500/30 to-transparent"></div>
       
-      <div className="relative max-w-4xl mx-auto p-3 sm:p-4 md:p-8 space-y-6 sm:space-y-8 md:space-y-12">
+      <div className="relative max-w-7xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 space-y-6 sm:space-y-8 md:space-y-12">
         {/* Header Section */}
         <div className="text-center space-y-4 sm:space-y-6 py-6 sm:py-8 md:py-12 px-2">
           <div className="space-y-3 sm:space-y-4">
@@ -202,8 +204,9 @@ export default function ProgramDetailPage() {
               <div className="w-12 h-px bg-red-500/30 mx-auto"></div>
             </div>
 
-            <div className="space-y-4 sm:space-y-6">
-              {data.days.map((day) => (
+            {/* Mobile Layout - List View */}
+            <div className="lg:hidden space-y-4 sm:space-y-6">
+              {data.days.sort((a, b) => a.day_of_week - b.day_of_week).map((day) => (
                 <Card key={day.id} className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl overflow-hidden">
                   <CardHeader className="border-b border-gray-800/50 pb-3 sm:pb-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
@@ -255,9 +258,10 @@ export default function ProgramDetailPage() {
                                   {set.log ? (
                                     <div className="flex items-center gap-2">
                                       <span className="break-words">
-                                        {set.log.reps} reps
-                                        {typeof set.log.weight === "number" ? ` @ ${set.log.weight}lbs` : ""}
-                                        {typeof set.log.rpe === "number" ? ` (RPE ${set.log.rpe})` : ""}
+                                        {typeof set.log.weight === "number" ? `${set.log.weight}lb` : ""}
+                                        {typeof set.log.weight === "number" && set.log.reps ? " x " : ""}
+                                        {set.log.reps || ""}
+                                        {typeof set.log.rpe === "number" ? ` @ ${set.log.rpe}` : ""}
                                       </span>
                                       {set.log.completed && (
                                         <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
@@ -276,6 +280,126 @@ export default function ProgramDetailPage() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Desktop Layout - Calendar View */}
+            <div className="hidden lg:block">
+              <div className="bg-gray-900/30 backdrop-blur-xl rounded-xl border border-gray-800/50 overflow-hidden">
+                {/* Calendar Header */}
+                <div className={`grid border-b border-gray-800/50 ${
+                  data.days.length === 1 ? 'grid-cols-1' :
+                  data.days.length === 2 ? 'grid-cols-2' :
+                  data.days.length === 3 ? 'grid-cols-3' :
+                  data.days.length === 4 ? 'grid-cols-4' :
+                  data.days.length === 5 ? 'grid-cols-5' :
+                  data.days.length === 6 ? 'grid-cols-6' :
+                  'grid-cols-7'
+                }`}>
+                  {data.days.sort((a, b) => a.day_of_week - b.day_of_week).map((day) => {
+                    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                    return (
+                      <div key={day.id} className="px-4 py-4 text-center border-r border-gray-800/50 last:border-r-0">
+                        <div className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+                          {dayNames[day.day_of_week]}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Calendar Week Grid */}
+                <div className={`grid min-h-[500px] ${
+                  data.days.length === 1 ? 'grid-cols-1' :
+                  data.days.length === 2 ? 'grid-cols-2' :
+                  data.days.length === 3 ? 'grid-cols-3' :
+                  data.days.length === 4 ? 'grid-cols-4' :
+                  data.days.length === 5 ? 'grid-cols-5' :
+                  data.days.length === 6 ? 'grid-cols-6' :
+                  'grid-cols-7'
+                }`}>
+                  {data.days.sort((a, b) => a.day_of_week - b.day_of_week).map((day) => (
+                    <div
+                      key={day.id}
+                      className={`border-r border-gray-800/50 last:border-r-0 p-3 transition-all duration-200 ${
+                        day.is_completed
+                          ? "bg-red-500/5 hover:bg-red-500/10"
+                          : "bg-gray-900/20 hover:bg-gray-800/30"
+                      }`}
+                    >
+                      <div className="h-full flex flex-col">
+                        {/* Day Header */}
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-700/30">
+                          <div className="text-sm font-medium text-white">
+                            {dayLabel(day.day_of_week)}
+                          </div>
+                          {day.is_completed && (
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          )}
+                        </div>
+
+                        {/* Day Content */}
+                        <div className="flex-1 space-y-2 overflow-y-auto max-h-[450px]">
+                          {day.daily_note && (
+                            <div className="bg-gray-800/40 rounded p-2 border border-gray-700/50">
+                              <p className="text-xs text-gray-300 leading-relaxed">
+                                {day.daily_note}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {day.exercises.map((exercise) => (
+                            <div key={exercise.id} className="bg-gray-800/30 rounded-lg p-2 border border-gray-700/40">
+                              <div className="mb-2">
+                                <h6 className="text-xs font-semibold text-white leading-tight mb-1">
+                                  {exercise.name}
+                                </h6>
+                                <p className="text-xs text-gray-400">
+                                  {exercise.muscle_group_name || 'Unknown'}
+                                </p>
+                              </div>
+                              
+                              {exercise.note && (
+                                <div className="bg-gray-800/50 rounded p-2 mb-2">
+                                  <p className="text-xs text-gray-300">
+                                    {exercise.note}
+                                  </p>
+                                </div>
+                              )}
+
+                              <div className="space-y-1">
+                                {exercise.sets.map((set) => (
+                                  <div key={set.id} className="flex items-center justify-between bg-gray-950/40 rounded p-2">
+                                    <span className="text-xs font-medium text-gray-200">
+                                      {set.set_number}
+                                    </span>
+                                    <div className="text-xs text-gray-300">
+                                                                              {set.log ? (
+                                          <div className="flex items-center gap-1">
+                                            <span className="text-right">
+                                              {typeof set.log.weight === "number" ? `${set.log.weight}lb` : ""}
+                                              {typeof set.log.weight === "number" && set.log.reps ? " x " : ""}
+                                              {set.log.reps || ""}
+                                              {typeof set.log.rpe === "number" ? ` @ ${set.log.rpe}` : ""}
+                                            </span>
+                                            {set.log.completed && (
+                                              <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-500">-</span>
+                                        )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
