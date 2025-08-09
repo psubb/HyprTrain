@@ -22,8 +22,19 @@ const allowed = (process.env.CORS_ORIGIN ?? '')
 
 const corsOptions: CorsOptions = {
   origin(origin, cb) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return cb(null, true);
+    
+    // If no CORS_ORIGIN is set, allow all origins in development
+    if (allowed.length === 0 && process.env.NODE_ENV === 'development') {
+      return cb(null, true);
+    }
+    
+    // Check if origin is in allowed list
     if (allowed.includes(origin)) return cb(null, true);
+    
+    // Log rejected origins for debugging
+    console.warn(`CORS rejected origin: ${origin}. Allowed origins:`, allowed);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,

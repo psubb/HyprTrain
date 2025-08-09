@@ -22,6 +22,13 @@ export async function register(req: Request, res: Response): Promise<void> {
             return;
         }
 
+        // Check for JWT secret before proceeding
+        if (!JWT_SECRET) {
+            console.error('Register Error: Missing ACCESS_TOKEN_SECRET environment variable');
+            res.status(500).json({message: 'Server configuration error.'});
+            return;
+        }
+
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const user: DBUser = await createUser(email, hashedPassword);
 
@@ -44,9 +51,20 @@ export async function register(req: Request, res: Response): Promise<void> {
             res.status(409).json({message: 'Email already in use.'});
             return;
         }
-        // TODO: Replace with logger before deploying to production?
-        console.error('Register Error:', error); // Log full error message
-        res.status(500).json({message: 'Something went wrong.', error: error?.message || 'Unknown error' });
+        
+        // Enhanced error logging for production debugging
+        console.error('Register Error:', {
+            message: error?.message || 'Unknown error',
+            code: error?.code,
+            detail: error?.detail,
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
+            timestamp: new Date().toISOString(),
+        });
+        
+        res.status(500).json({
+            message: 'Something went wrong.',
+            error: process.env.NODE_ENV === 'development' ? error?.message : 'Internal server error'
+        });
     }
 }
 
