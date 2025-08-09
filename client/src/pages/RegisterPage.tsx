@@ -30,8 +30,26 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setError("Password must contain at least one lowercase letter");
+      setLoading(false);
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter");
+      setLoading(false);
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      setError("Password must contain at least one number");
       setLoading(false);
       return;
     }
@@ -124,8 +142,10 @@ export default function RegisterPage() {
               </div>
               
               <div className="text-xs text-gray-400 bg-gray-800/20 border border-gray-700/30 rounded-lg p-3">
-                <p>• Password must be at least 6 characters long</p>
-                <p>• Use a strong, unique password for your account</p>
+                <p>• Password must be at least 8 characters long</p>
+                <p>• Must contain at least one lowercase letter</p>
+                <p>• Must contain at least one uppercase letter</p>
+                <p>• Must contain at least one number</p>
               </div>
               
               <Button 
