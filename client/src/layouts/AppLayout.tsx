@@ -142,7 +142,7 @@ export default function AppLayout() {
             </>
           ) : (
             <>
-              <span className="text-gray-300 px-2 text-sm hidden sm:block truncate max-w-32 bg-gray-800/30 border border-gray-700/50 rounded-lg py-1.5">
+              <span className="text-gray-300 px-3 text-sm hidden md:block bg-gray-800/30 border border-gray-700/50 rounded-lg py-1.5 whitespace-nowrap">
                 {user?.email}
               </span>
               <Button 

@@ -30,7 +30,7 @@ export async function register(req: Request, res: Response): Promise<void> {
         // Return all fields about user except for hashedPassword for security
         res.status(201).json({
             message: 'User Created',
-            token,
+            accessToken: token,
             user: {
                 id: user.id,
                 email: user.email,
