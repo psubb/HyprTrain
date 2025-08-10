@@ -361,7 +361,7 @@ export default function ProgramBuilderPage() {
 
       const dayCount = daysWithExercises.length;
       showToast.success(`Program created successfully with ${dayCount} workout day${dayCount !== 1 ? 's' : ''}! 🎉`);
-      navigate("/programs");
+      navigate("/workout-days/active");
     } catch (e: any) {
       const errorMsg = e?.response?.data?.message || "Failed to create program";
       showToast.error(errorMsg);
