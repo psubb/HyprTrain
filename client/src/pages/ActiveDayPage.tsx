@@ -680,6 +680,55 @@ function ExerciseCard({
   newExerciseNote,
   setNewExerciseNote
 }: ExerciseCardProps) {
+  // State to manage auto-filled weights for all sets
+  const [autoFilledWeights, setAutoFilledWeights] = useState<{ [setId: string]: string }>({});
+
+  const handleWeightChange = (weight: string, setIndex: number) => {
+    // If this is the first set being logged (and it has a weight), auto-fill all subsequent unlogged sets
+    if (setIndex === 0 && weight && !exercise.sets[0].log?.completed) {
+      const newWeights: { [setId: string]: string } = { ...autoFilledWeights };
+      
+      exercise.sets.forEach((set, idx) => {
+        if (idx > 0 && !set.log?.completed) {
+          newWeights[set.id] = weight;
+        }
+      });
+      
+      setAutoFilledWeights(newWeights);
+    }
+    // If this is the second set being changed, propagate to all subsequent unlogged sets
+    else if (setIndex === 1 && weight) {
+      const newWeights: { [setId: string]: string } = { ...autoFilledWeights };
+      
+      exercise.sets.forEach((set, idx) => {
+        if (idx > 1 && !set.log?.completed) {
+          newWeights[set.id] = weight;
+        }
+      });
+      
+      setAutoFilledWeights(newWeights);
+    }
+  };
+
+  const handleSetLogged = async (setId: string, reps: number, weight: number | null, rpe: number | null) => {
+    const setIndex = exercise.sets.findIndex(set => set.id === setId);
+    
+    // If this is the first set being logged with a weight, auto-fill subsequent sets
+    if (setIndex === 0 && weight !== null) {
+      const newWeights: { [setId: string]: string } = { ...autoFilledWeights };
+      
+      exercise.sets.forEach((set, idx) => {
+        if (idx > 0 && !set.log?.completed) {
+          newWeights[set.id] = weight.toString();
+        }
+      });
+      
+      setAutoFilledWeights(newWeights);
+    }
+    
+    // Call the original onLogSet
+    await onLogSet(setId, reps, weight, rpe);
+  };
   return (
     <Card className="border border-gray-800/50 bg-gray-900/30 backdrop-blur-xl shadow-xl overflow-hidden mx-2 sm:mx-0">
       <CardHeader className="border-b border-gray-800/50 pb-4">
@@ -760,7 +809,9 @@ function ExerciseCard({
                   key={set.id}
                   set={set}
                   setNumber={index + 1}
-                  onLogSet={onLogSet}
+                  onLogSet={handleSetLogged}
+                  onWeightChange={(weight) => handleWeightChange(weight, index)}
+                  autoFilledWeight={autoFilledWeights[set.id]}
                   isBlocked={isBlocked}
                 />
               );
@@ -799,10 +850,12 @@ type SetRowProps = {
   set: DaySet;
   setNumber: number;
   onLogSet: (setId: string, reps: number, weight: number | null, rpe: number | null) => void;
+  onWeightChange: (weight: string) => void;
+  autoFilledWeight?: string;
   isBlocked: boolean; // Whether this set is blocked by incomplete previous sets
 };
 
-function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
+function SetRow({ set, setNumber, onLogSet, onWeightChange, autoFilledWeight, isBlocked }: SetRowProps) {
   // Pre-select previous values if available, otherwise use logged values, otherwise start empty
   const [reps, setReps] = useState(
     set.log?.reps?.toString() || 
@@ -812,8 +865,16 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
   const [weight, setWeight] = useState(
     set.log?.weight?.toString() || 
     set.previous_log?.weight?.toString() || 
+    autoFilledWeight ||
     ""
   );
+  
+  // Update weight when autoFilledWeight changes (but don't override already logged sets)
+  useEffect(() => {
+    if (autoFilledWeight && !set.log?.completed) {
+      setWeight(autoFilledWeight);
+    }
+  }, [autoFilledWeight, set.log?.completed]);
   const [rpe, setRpe] = useState(
     set.log?.rpe?.toString() || 
     set.previous_log?.rpe?.toString() || 
@@ -983,7 +1044,10 @@ function SetRow({ set, setNumber, onLogSet, isBlocked }: SetRowProps) {
               <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
                 Weight (lbs)
               </label>
-              <Select value={weight} onValueChange={setWeight} disabled={isBlocked}>
+              <Select value={weight} onValueChange={(value) => {
+                setWeight(value);
+                onWeightChange(value);
+              }} disabled={isBlocked}>
                 <SelectTrigger className={`bg-gray-950/50 border-gray-700 text-white transition-all duration-200 h-10 sm:h-auto ${
                   isBlocked ? 'cursor-not-allowed' : 'hover:border-red-500/50 focus:border-red-500/50'
                 }`}>
