@@ -26,6 +26,11 @@ This project demonstrates **end-to-end engineering skills**: backend API design,
 - **Email**: `demo@hyprtrain.com`  
 - **Password**: `DemoPass@123`  
 
+**Full App Walkthrough (Video)**
+[![Full App Walkthrough](https://img.youtube.com/vi/WwzjcYmljvU/maxresdefault.jpg)](https://youtu.be/WwzjcYmljvU)
+
+- **Full App Walkthrough (Video)** – [Watch on YouTube](https://youtu.be/WwzjcYmljvU)
+
 ---
 
 ## Screenshots
@@ -45,14 +50,6 @@ This project demonstrates **end-to-end engineering skills**: backend API design,
 | Desktop Workout Logger | ![Desktop Workout Logger](client/public/screenshots/desktop/desktop_workout_logger.png) |
 | Desktop Program Builder | ![Desktop Program Builder](client/public/screenshots/desktop/desktop_program_builder.png) |
 | Desktop Program Overview | ![Desktop Program Overview](client/public/screenshots/desktop/desktop_program_overview.png) |
-
----
-
-## Demo Video / GIFs
-
-[![Full App Walkthrough](https://img.youtube.com/vi/WwzjcYmljvU/maxresdefault.jpg)](https://youtu.be/WwzjcYmljvU)
-
-- **Full App Walkthrough (Video)** – [Watch on YouTube](https://youtu.be/WwzjcYmljvU)  
 
 ---
 
