@@ -30,13 +30,11 @@ This project demonstrates **end-to-end engineering skills**: backend API design,
 
 ## Screenshots
 
-> Store your images in `client/public/screenshots/...` so GitHub can display them via relative paths.
-
 ### Mobile Views
 | Feature | Screenshot |
 |---|---|
-| Mobile Workout Logger | ![Mobile Workout Logger](client/public/screenshots/mobile/mobile_workout_logging.png) |
-| Mobile Program Builder | ![Mobile Program Builder](client/public/screenshots/mobile/mobile_program_builder.png) |
+| Mobile Workout Logger | ![Mobile Workout Logger](client/public/screenshots/mobile/mobile_workout_logging.PNG) |
+| Mobile Program Builder | ![Mobile Program Builder](client/public/screenshots/mobile/mobile_program_builder.PNG) |
 
 ---
 
